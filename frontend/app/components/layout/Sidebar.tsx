@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         `}>
           {/* Header with logo and close button */}
           <div className="flex items-center justify-between py-3 px-4 border-b border-neutral-700">
-            <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-6 h-6 bg-emerald-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">1N</span>
               </div>
@@ -71,7 +71,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <h2 className="text-white font-semibold">1Node</h2>
                 <p className="text-neutral-400 text-xs">Automation Builder</p>
               </div>
-            </div>
+            </Link>
             {/* Close button for mobile */}
             <button
               onClick={onClose}

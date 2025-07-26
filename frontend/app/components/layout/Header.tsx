@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {Menu, User, PanelRight, Bell, ChevronDown} from 'lucide-react';
-import { useLocation } from 'react-router';
+import { useLocation, Link } from 'react-router';
 import { AccountSettingsModal } from '../modals/AccountSettingsModal';
 
 interface HeaderProps {
@@ -46,14 +46,14 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
 
         {/* Logo/Brand - only show when sidebar is closed */}
         {!sidebarOpen && (
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">1N</span>
             </div>
             <span className="text-white font-semibold text-lg hidden sm:block">
               1Node
             </span>
-          </div>
+          </Link>
         )}
 
         {/* Page title - positioned close to left */}
