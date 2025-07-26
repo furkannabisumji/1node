@@ -1,45 +1,85 @@
 import { AppLayout } from '~/components/layout/AppLayout';
-import { Plus, Activity, Zap, TrendingUp } from 'lucide-react';
+import { PortfolioOverview } from '~/components/dashboard/PortfolioOverview';
+import { UserProfile } from '~/components/dashboard/UserProfile';
+import { TrendingUp, AlertTriangle } from 'lucide-react';
 
-// Mock data for demonstration
-const stats = [
-  { name: 'Active Automations', value: '12', change: '+3', changeType: 'positive' },
-  { name: 'Total Executions', value: '1,247', change: '+18%', changeType: 'positive' },
-  { name: 'Success Rate', value: '98.5%', change: '+2.1%', changeType: 'positive' },
-  { name: 'Gas Saved', value: '$324', change: '+12%', changeType: 'positive' },
+// Mock portfolio data
+const portfolioData = {
+  totalValue: 45678.9,
+  change24h: '+12.5%',
+  changeType: 'positive' as const
+};
+
+const cryptoHoldings = [
+  {
+    name: 'Ethereum',
+    symbol: 'ETH',
+    amount: 8.5,
+    usdValue: 20400,
+    usdcAmount: 5030.5,
+    usdcValue: 5030.5
+  },
+  {
+    name: 'Ethereum',
+    symbol: 'ETH', 
+    amount: 8.5,
+    usdValue: 20400,
+    usdcAmount: 5030.5,
+    usdcValue: 5030.5
+  },
+  {
+    name: 'Ethereum',
+    symbol: 'ETH',
+    amount: 8.5,
+    usdValue: 20400,
+    usdcAmount: 5030.5,
+    usdcValue: 5030.5
+  }
 ];
 
-const recentAutomations = [
+const aiInsights = [
   {
-    id: 1,
-    name: 'ETH Protection Strategy',
-    description: 'Auto-swap when price drops with gas optimization',
-    status: 'active',
-    lastExecution: '2 hours ago',
-    type: 'Price Protection'
+    type: 'opportunity',
+    title: 'High Yield Opportunity Detected',
+    description: 'USDC staking on Optimism now offers 12.5% APY - 4% higher than your current position',
+    actionText: 'Move $5,000 USDC to Optimism',
+    icon: TrendingUp,
+    color: 'text-green-500'
   },
   {
-    id: 2,
-    name: 'Yield Farming Optimizer',
-    description: 'Automatically compound rewards across protocols',
-    status: 'active',
-    lastExecution: '6 hours ago',
-    type: 'DeFi Strategy'
-  },
-  {
-    id: 3,
-    name: 'Gas Fee Monitor',
-    description: 'Execute transactions when gas is below threshold',
-    status: 'paused',
-    lastExecution: '1 day ago',
-    type: 'Gas Optimization'
-  },
+    type: 'alert',
+    title: 'Portfolio Risk Alert',
+    description: 'Your ETH exposure is 65% of portfolio. Consider rebalancing to reduce risk',
+    actionText: 'Diversify into stablecoins',
+    icon: AlertTriangle,
+    color: 'text-yellow-500'
+  }
 ];
 
 export default function Dashboard() {
   return (
-      <AppLayout>
-        <div>Dashboard</div>
+    <AppLayout>
+      <div className="p-4 lg:p-6 mx-auto">
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          
+          {/* Portfolio Overview - Takes 2 columns on large screens */}
+          <div className="xl:col-span-2">
+            <PortfolioOverview 
+              portfolioData={portfolioData}
+              holdings={cryptoHoldings}
+            />
+          </div>
+
+          {/* User Profile Sidebar */}
+          <div className="xl:col-span-1">
+            <UserProfile 
+              walletAddress="0x3AdE67...780"
+              username="John Doe"
+            />
+          </div>
+        </div>
+      </div>
     </AppLayout>
   );
 }

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import {Bot, Sparkles} from 'lucide-react';
+import { Link } from 'react-router';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -28,6 +30,16 @@ export function AppLayout({ children }: AppLayoutProps) {
         <main className="flex-1 overflow-y-auto bg-black">
           {children}
         </main>
+      </div>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Link
+          to="/automations/create"
+          className="w-12 h-12 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-lg transition-colors"
+        >
+          <Sparkles className="w-6 h-6 text-white" />
+        </Link>
       </div>
 
     </div>
