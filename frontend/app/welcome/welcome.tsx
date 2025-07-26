@@ -1,3 +1,5 @@
+import { Link } from 'react-router';
+
 export function Welcome() {
   return (
     <main className="min-h-screen bg-white dark:bg-black">
@@ -11,9 +13,12 @@ export function Welcome() {
             Automate complex DeFi strategies across multiple blockchains with zero code required
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-green-500 hover:bg-green-600 text-black px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-lg transition-all">
+            <Link 
+              to="/onboarding" 
+              className="bg-green-500 hover:bg-green-600 text-black px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-lg transition-all"
+            >
               Start Automating
-            </button>
+            </Link>
             <button className="border border-green-500 text-green-500 hover:bg-green-500 hover:text-black px-8 py-4 rounded-lg text-lg font-semibold transition-all">
               Watch Demo
             </button>
