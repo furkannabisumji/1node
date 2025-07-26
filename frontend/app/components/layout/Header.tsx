@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import {Menu, Bell, Settings, User, PanelRight} from 'lucide-react';
+import {Menu, User, PanelRight, Bell, ChevronDown} from 'lucide-react';
 import { useLocation } from 'react-router';
 import { AccountSettingsModal } from '../modals/AccountSettingsModal';
 
@@ -15,14 +15,14 @@ const getPageTitle = (pathname: string): string => {
       return 'Dashboard';
     case '/automations':
       return 'Automations';
-    case '/automations/create':
-      return 'Create Automation';
+      case '/automations/create':
+        return 'Automation Builder';
     case '/settings':
       return 'Settings';
     case '/help':
       return 'Help';
     default:
-      return 'Automation Builder';
+      return '';
   }
 };
 
@@ -67,6 +67,14 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
 
       {/* Right section with user actions */}
       <div className="flex items-center gap-2">
+        {/* User icon */}
+        <button 
+          onClick={() => setIsAccountModalOpen(true)}
+          className="p-2 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
+        >
+          <User className="h-5 w-5 text-neutral-300" />
+        </button>
+
         {/* Notifications */}
         <button className="p-2 rounded-lg hover:bg-neutral-800 transition-colors relative">
           <Bell className="h-5 w-5 text-neutral-300" />
@@ -74,22 +82,10 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
         </button>
 
-        {/* Settings */}
-        <button className="p-2 rounded-lg hover:bg-neutral-800 transition-colors">
-          <Settings className="h-5 w-5 text-neutral-300" />
-        </button>
-
-        {/* User menu */}
-        <button 
-          onClick={() => setIsAccountModalOpen(true)}
-          className="flex items-center gap-2 ml-2 p-2 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
-        >
-          <div className="w-8 h-8 bg-neutral-600 rounded-full flex items-center justify-center">
-            <User className="h-4 w-4 text-neutral-300" />
-          </div>
-          <span className="text-neutral-300 text-sm hidden lg:block">
-            0x3AdE67...780
-          </span>
+        {/* Wallet Connection Button */}
+        <button className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-3 py-2 rounded-lg transition-colors border border-neutral-600">
+          <span className="text-sm font-medium">0x3AdE67...780</span>
+          <ChevronDown className="h-4 w-4 text-neutral-400" />
         </button>
       </div>
 
