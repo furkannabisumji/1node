@@ -1,5 +1,6 @@
 import type { Route } from "./+types/onboarding";
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { User, Globe, Bell, Check } from "lucide-react";
 import { ProgressBar } from "../components/onboarding/ProgressBar";
 import { FormCard } from "../components/onboarding/FormCard";
@@ -16,6 +17,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Onboarding() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [step1Data, setStep1Data] = useState({
     username: '',
@@ -51,8 +53,11 @@ export default function Onboarding() {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
-      // TODO: Submit form
+      // Submit form and redirect to dashboard
       console.log('Submit', { step1Data, step2Data, step3Data });
+      // TODO: Send data to backend
+      // Redirect to dashboard after successful onboarding
+      navigate('/dashboard');
     }
   };
 
