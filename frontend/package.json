@@ -11,6 +11,7 @@
   "dependencies": {
     "@react-router/node": "^7.7.1",
     "@react-router/serve": "^7.7.1",
+    "@xyflow/react": "^12.8.2",
     "isbot": "^5.1.27",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
