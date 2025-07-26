@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import {Menu, Bell, Settings, User, PanelRight} from 'lucide-react';
 import { useLocation } from 'react-router';
+import { AccountSettingsModal } from '../modals/AccountSettingsModal';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -27,6 +29,7 @@ const getPageTitle = (pathname: string): string => {
 export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
   return (
     <header className="bg-black border-b border-neutral-800 h-16 flex items-center justify-between px-4 lg:px-6">
@@ -77,15 +80,24 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
         </button>
 
         {/* User menu */}
-        <div className="flex items-center gap-2 ml-2">
+        <button 
+          onClick={() => setIsAccountModalOpen(true)}
+          className="flex items-center gap-2 ml-2 p-2 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
+        >
           <div className="w-8 h-8 bg-neutral-600 rounded-full flex items-center justify-center">
             <User className="h-4 w-4 text-neutral-300" />
           </div>
           <span className="text-neutral-300 text-sm hidden lg:block">
             0x3AdE67...780
           </span>
-        </div>
+        </button>
       </div>
+
+      {/* Account Settings Modal */}
+      <AccountSettingsModal 
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
+      />
     </header>
   );
 }

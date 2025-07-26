@@ -1,6 +1,6 @@
 import { AppLayout } from '~/components/layout/AppLayout';
 import { PortfolioOverview } from '~/components/dashboard/PortfolioOverview';
-import { UserProfile } from '~/components/dashboard/UserProfile';
+import { AIInsights } from '~/components/dashboard/AIInsights';
 import { TrendingUp, AlertTriangle } from 'lucide-react';
 
 // Mock portfolio data
@@ -71,12 +71,9 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* User Profile Sidebar */}
+          {/* AI Insights Sidebar */}
           <div className="xl:col-span-1">
-            <UserProfile 
-              walletAddress="0x3AdE67...780"
-              username="John Doe"
-            />
+            <AIInsights insights={aiInsights} />
           </div>
         </div>
       </div>
