@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import cookieParser from 'cookie-parser';
 
 import { logger } from './config/logger.js';
 import { connectDatabase } from './config/database.js';
@@ -47,6 +48,7 @@ class Application {
     }));
 
     // Body parsing
+    this.app.use(cookieParser());
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

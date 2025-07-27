@@ -4,7 +4,6 @@ import { body, param, query, validationResult } from 'express-validator';
 import { logger } from '../config/logger.js';
 import { prisma } from '../config/database.js';
 import { addTriggerEvaluationJob, addExecutionJob } from '../jobs/index.js';
-import { oneInchService } from '../services/oneInchService.js';
 
 const router = express.Router();
 

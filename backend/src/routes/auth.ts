@@ -65,16 +65,12 @@ router.post(
 
       logger.info(`User authenticated: ${user.id}`, { walletAddress });
 
-      res.json({
-        message: 'Authentication successful',
-        token,
-        user: {
-          id: user.id,
-          walletAddress: user.walletAddress,
-          email: user.email,
-          preferredChains: user.preferredChains,
-          riskTolerance: user.riskTolerance,
-        },
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      }).json({
+        message: 'Authentication successful'
       });
     } catch (error) {
       logger.error('Wallet authentication failed:', error);
