@@ -14,3 +14,6 @@ coverage/
 .cache/
 .vscode/
 .idea/
+backend/node_modules/
+backend/dist/
+backend/.env

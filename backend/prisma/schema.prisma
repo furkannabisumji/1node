@@ -1,0 +1,267 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // User identity
+  walletAddress String @unique
+  email         String? @unique
+  username      String? @unique
+
+  // User preferences
+  preferredChains  String[] // ["ethereum", "polygon", "arbitrum"]
+  riskTolerance    RiskLevel @default(MEDIUM)
+  notificationPrefs Json     @default("{}")
+
+  // Relationships
+  workflows     Workflow[]
+  notifications Notification[]
+  apiKeys       ApiKey[]
+
+  @@map("users")
+}
+
+model Workflow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Basic info
+  name        String
+  description String?
+  isActive    Boolean @default(false)
+  userId      String
+
+  // Workflow configuration
+  triggers    Trigger[]
+  actions     Action[]
+  conditions  Condition[]
+
+  // Deposited funds for this workflow
+  deposits    WorkflowDeposit[]
+
+  // Execution history
+  executions  Execution[]
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("workflows")
+}
+
+model WorkflowDeposit {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  workflowId String
+  chainId    Int
+  tokenAddress String
+  tokenSymbol  String
+  amount       String // Using string to handle large numbers
+  isLocked     Boolean @default(false)
+  lockReason   String?
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@map("workflow_deposits")
+}
+
+model Trigger {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workflowId String
+  type       TriggerType
+  chainId    Int?
+  
+  // Trigger configuration (JSON for flexibility)
+  config     Json
+
+  // Examples:
+  // Price trigger: { "token": "ETH", "threshold": "2000", "operator": "lt" }
+  // Balance trigger: { "token": "USDC", "threshold": "1000", "operator": "gte" }
+  // Time trigger: { "schedule": "0 9 * * *" }
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@map("triggers")
+}
+
+model Action {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workflowId String
+  type       ActionType
+  chainId    Int?
+  
+  // Action configuration
+  config     Json
+
+  // Examples:
+  // Swap action: { "fromToken": "ETH", "toToken": "USDC", "amount": "50%", "slippage": "1%" }
+  // Transfer action: { "token": "USDC", "to": "0x...", "amount": "100" }
+  // Cross-chain action: { "fromChain": 1, "toChain": 137, "token": "ETH", "amount": "1" }
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@map("actions")
+}
+
+model Condition {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workflowId String
+  type       ConditionType
+  
+  // Condition configuration
+  config     Json
+
+  // Examples:
+  // Amount condition: { "minAmount": "100", "maxAmount": "1000" }
+  // Time condition: { "startTime": "09:00", "endTime": "17:00", "timezone": "UTC" }
+  // Market condition: { "minVolume": "1000000", "maxGasPrice": "50" }
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@map("conditions")
+}
+
+model Execution {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workflowId String
+  status     ExecutionStatus
+  
+  // Execution details
+  triggeredBy    Json // Which trigger fired
+  actionsExecuted Json // What actions were taken
+  transactionHashes String[] // On-chain transaction hashes
+  gasUsed        String?
+  totalCost      String?
+  
+  // Results
+  success        Boolean @default(false)
+  errorMessage   String?
+  executionTime  Int? // milliseconds
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@map("executions")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean @default(false)
+  
+  // Optional data for rich notifications
+  metadata  Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId      String
+  name        String
+  keyHash     String @unique
+  permissions String[] // ["read", "write", "execute"]
+  isActive    Boolean @default(true)
+  lastUsed    DateTime?
+  expiresAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+// Enums
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TriggerType {
+  PRICE_THRESHOLD
+  PRICE_CHANGE
+  BALANCE_CHANGE
+  TIME_BASED
+  TRANSACTION_RECEIVED
+  YIELD_AVAILABLE
+  CROSS_CHAIN_PRICE_DIFF
+  PORTFOLIO_RATIO
+  MARKET_EVENT
+}
+
+enum ActionType {
+  SWAP
+  TRANSFER
+  CROSS_CHAIN_SWAP
+  STAKE
+  UNSTAKE
+  PROVIDE_LIQUIDITY
+  REMOVE_LIQUIDITY
+  CLAIM_REWARDS
+  REPAY_DEBT
+  BORROW
+  SEND_NOTIFICATION
+  WEBHOOK_CALL
+}
+
+enum ConditionType {
+  AMOUNT_LIMIT
+  TIME_WINDOW
+  GAS_PRICE_LIMIT
+  SLIPPAGE_LIMIT
+  MARKET_CONDITIONS
+  PORTFOLIO_PROTECTION
+}
+
+enum ExecutionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum NotificationType {
+  EXECUTION_SUCCESS
+  EXECUTION_FAILED
+  WORKFLOW_TRIGGERED
+  AI_SUGGESTION
+  RISK_ALERT
+  SYSTEM_UPDATE
+} 
