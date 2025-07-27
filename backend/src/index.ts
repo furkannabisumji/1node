@@ -3,10 +3,10 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 
-import { config } from './config/index.js';
 import { logger } from './config/logger.js';
 import { connectDatabase } from './config/database.js';
 import { initializeJobs } from './jobs/index.js';
+import { config } from './config/index.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';

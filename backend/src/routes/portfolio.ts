@@ -1,9 +1,9 @@
 import express from 'express';
 import { param, query, body, validationResult } from 'express-validator';
-import { prisma } from '@/config/database.js';
-import { logger } from '@/config/logger.js';
-import { oneInchService } from '@/services/oneInchService.js';
-import { SUPPORTED_CHAINS } from '@/config/index.js';
+import { prisma } from '../config/database.js';
+import { logger } from '../config/logger.js';
+import { oneInchService } from '../services/oneInchService.js';
+import { SUPPORTED_CHAINS } from '../config/index.js';
 
 const router = express.Router();
 

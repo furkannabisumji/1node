@@ -23,9 +23,6 @@ interface Config {
   // Blockchain RPC URLs
   ethereumRpcUrl: string;
   polygonRpcUrl: string;
-  arbitrumRpcUrl: string;
-  bscRpcUrl: string;
-  optimismRpcUrl: string;
 
   // Private keys
   executorPrivateKey: string;
@@ -34,18 +31,11 @@ interface Config {
   openaiApiKey: string;
 
   // Notifications
-  telegramBotToken: string;
   smtpHost: string;
   smtpPort: number;
   smtpUser: string;
   smtpPass: string;
 
-  // External APIs
-  chainlinkApiKey: string;
-
-  // Rate limiting
-  rateLimitWindowMs: number;
-  rateLimitMaxRequests: number;
 
   // Logging
   logLevel: string;
@@ -91,9 +81,6 @@ function validateConfig(): Config {
     // Blockchain RPC URLs
     ethereumRpcUrl: process.env.ETHEREUM_RPC_URL!,
     polygonRpcUrl: process.env.POLYGON_RPC_URL || '',
-    arbitrumRpcUrl: process.env.ARBITRUM_RPC_URL || '',
-    bscRpcUrl: process.env.BSC_RPC_URL || '',
-    optimismRpcUrl: process.env.OPTIMISM_RPC_URL || '',
 
     // Private keys
     executorPrivateKey: process.env.EXECUTOR_PRIVATE_KEY || '',
@@ -102,18 +89,10 @@ function validateConfig(): Config {
     openaiApiKey: process.env.OPENAI_API_KEY || '',
 
     // Notifications
-    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
     smtpHost: process.env.SMTP_HOST || '',
     smtpPort: parseInt(process.env.SMTP_PORT || '587', 10),
     smtpUser: process.env.SMTP_USER || '',
     smtpPass: process.env.SMTP_PASS || '',
-
-    // External APIs
-    chainlinkApiKey: process.env.CHAINLINK_API_KEY || '',
-
-    // Rate limiting
-    rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-    rateLimitMaxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
 
     // Logging
     logLevel: process.env.LOG_LEVEL || 'info',
@@ -142,24 +121,7 @@ export const SUPPORTED_CHAINS = {
     rpcUrl: config.polygonRpcUrl,
     nativeCurrency: 'MATIC',
   },
-  ARBITRUM: {
-    id: 42161,
-    name: 'Arbitrum',
-    rpcUrl: config.arbitrumRpcUrl,
-    nativeCurrency: 'ETH',
-  },
-  BSC: {
-    id: 56,
-    name: 'BNB Smart Chain',
-    rpcUrl: config.bscRpcUrl,
-    nativeCurrency: 'BNB',
-  },
-  OPTIMISM: {
-    id: 10,
-    name: 'Optimism',
-    rpcUrl: config.optimismRpcUrl,
-    nativeCurrency: 'ETH',
-  },
+
 } as const;
 
 export type SupportedChainId = keyof typeof SUPPORTED_CHAINS; 

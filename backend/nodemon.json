@@ -2,9 +2,10 @@
   "watch": ["src"],
   "ext": "ts,json",
   "ignore": ["src/**/*.test.ts", "src/**/*.spec.ts", "node_modules"],
-  "exec": "ts-node src/index.ts",
+  "exec": "node --loader ts-node/esm src/index.ts",
   "env": {
-    "NODE_ENV": "development"
+    "NODE_ENV": "development",
+    "TS_NODE_PROJECT": "./tsconfig.json"
   },
   "delay": "1000"
 } 

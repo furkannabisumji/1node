@@ -1,17 +1,16 @@
-import { Queue, Worker, QueueScheduler } from 'bullmq';
-import IORedis from 'ioredis';
-import { config } from '../config';
-import { logger } from '../config/logger';
+import { Queue, Worker } from 'bullmq';
+import { Redis } from 'ioredis';
+import { config } from '../config/index.js';
+import { logger } from '../config/logger.js';
 
 // Import job processors
-import { processTriggerEvaluation } from './triggerProcessor';
-import { processAutomationExecution } from './executionProcessor';
-import { processNotificationJob } from './notificationProcessor';
-import { processAIAnalysis } from './aiProcessor';
+import { processTriggerEvaluation } from './triggerProcessor.js';
+import { processAutomationExecution } from './executionProcessor.js';
+import { processNotificationJob } from './notificationProcessor.js';
+import { processAIAnalysis } from './aiProcessor.js';
 
 // Redis connection
-const redisConnection = new IORedis(config.redisUrl, {
-  retryDelayOnFailover: 100,
+const redisConnection = new Redis(config.redisUrl, {
   enableReadyCheck: false,
   maxRetriesPerRequest: null,
 });
@@ -21,12 +20,6 @@ export const triggerQueue = new Queue('trigger-evaluation', { connection: redisC
 export const executionQueue = new Queue('automation-execution', { connection: redisConnection });
 export const notificationQueue = new Queue('notifications', { connection: redisConnection });
 export const aiQueue = new Queue('ai-analysis', { connection: redisConnection });
-
-// Queue schedulers for delayed jobs
-const triggerScheduler = new QueueScheduler('trigger-evaluation', { connection: redisConnection });
-const executionScheduler = new QueueScheduler('automation-execution', { connection: redisConnection });
-const notificationScheduler = new QueueScheduler('notifications', { connection: redisConnection });
-const aiScheduler = new QueueScheduler('ai-analysis', { connection: redisConnection });
 
 // Workers
 let triggerWorker: Worker;
@@ -183,7 +176,7 @@ export async function addTriggerEvaluationJob(workflowId: string, priority = 0):
       removeOnComplete: 20,
       removeOnFail: 10,
       attempts: 3,
-      backoff: 'exponential',
+      backoff: { type: 'exponential' },
     }
   );
 }
@@ -201,7 +194,7 @@ export async function addExecutionJob(
       removeOnComplete: 20,
       removeOnFail: 10,
       attempts: 3,
-      backoff: 'exponential',
+      backoff: { type: 'exponential' },
       delay: 1000, // 1 second delay
     }
   );
@@ -221,7 +214,7 @@ export async function addNotificationJob(
       removeOnComplete: 50,
       removeOnFail: 20,
       attempts: 3,
-      backoff: 'exponential',
+      backoff: { type: 'exponential' },
     }
   );
 }
@@ -238,7 +231,7 @@ export async function addAIAnalysisJob(
       removeOnComplete: 10,
       removeOnFail: 5,
       attempts: 2,
-      backoff: 'exponential',
+      backoff: { type: 'exponential' },
     }
   );
 }
@@ -271,12 +264,7 @@ export async function shutdownJobs(): Promise<void> {
     aiWorker?.close(),
   ]);
 
-  await Promise.all([
-    triggerScheduler?.close(),
-    executionScheduler?.close(),
-    notificationScheduler?.close(),
-    aiScheduler?.close(),
-  ]);
+  // Schedulers no longer needed in modern BullMQ
 
   await redisConnection.disconnect();
   logger.info('✅ Job workers shut down successfully');

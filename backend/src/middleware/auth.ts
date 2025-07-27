@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import { config } from '../config';
-import { logger } from '../config/logger';
-import { prisma } from '../config/database';
+import { config } from '../config/index.js';
+import { logger } from '../config/logger.js';
+import { prisma } from '../config/database.js';
 
 // Extend Express Request interface to include user
 declare global {
@@ -166,7 +166,7 @@ export const generateToken = (
   userId: string,
   walletAddress: string,
   email?: string,
-  expiresIn: string = '7d'
+  expiresIn: string | number = '7d'
 ): string => {
   const payload: Omit<JWTPayload, 'iat' | 'exp'> = {
     userId,
@@ -174,7 +174,7 @@ export const generateToken = (
     email,
   };
 
-  return jwt.sign(payload, config.jwtSecret, { expiresIn });
+  return jwt.sign(payload, config.jwtSecret, { expiresIn } as SignOptions);
 };
 
 /**

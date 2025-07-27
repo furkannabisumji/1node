@@ -1,9 +1,10 @@
 import express from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { prisma } from '@/config/database.js';
-import { logger } from '@/config/logger.js';
-import { addTriggerEvaluationJob, addExecutionJob } from '@/jobs/index.js';
-import { oneInchService } from '@/services/oneInchService.js';
+
+import { logger } from '../config/logger.js';
+import { prisma } from '../config/database.js';
+import { addTriggerEvaluationJob, addExecutionJob } from '../jobs/index.js';
+import { oneInchService } from '../services/oneInchService.js';
 
 const router = express.Router();
 
