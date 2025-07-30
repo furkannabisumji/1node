@@ -1,7 +1,4 @@
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
+import 'dotenv/config';
 
 interface Config {
   // Server
