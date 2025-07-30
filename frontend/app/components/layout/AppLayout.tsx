@@ -3,6 +3,8 @@ import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import {Bot, Sparkles} from 'lucide-react';
 import { Link } from 'react-router';
+import { ToastContainer } from 'react-toastify';
+
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -20,7 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="h-screen flex bg-black">
       {/* Sidebar - Fixed position overlay */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
+
       {/* Main content area - full width */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
