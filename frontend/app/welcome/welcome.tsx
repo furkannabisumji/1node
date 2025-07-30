@@ -1,7 +1,49 @@
-import { Link } from 'react-router';
-import { Zap, ArrowRight, Play, TrendingUp, Shield, Bot, ChevronRight, DollarSign, Clock, Send } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
+import { Zap, ArrowRight, Play, TrendingUp, Shield, Bot, ChevronRight, DollarSign, Clock, Send, Check, Wallet } from 'lucide-react';
+import { ConnectKitButton } from 'connectkit';
+import { useEffect } from 'react';
+import { useAccount } from 'wagmi';
+import axiosInstance from '~/lib/axios';
+import { useAuth } from '~/auth/AuthProvider';
+
+import { useSignMessage } from 'wagmi';
+import axios from 'axios';
+
 
 export function Welcome() {
+  const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const signIn = async () => {
+      if (!isConnected || !address) return;
+      try {
+        const message = `Sign this message to authenticate. Timestamp: ${Date.now()}`;
+        const signature = await signMessageAsync({ message });
+        const res = await axiosInstance.post('/auth/connect-wallet', {
+          walletAddress: address,
+          signature,
+          message,
+        });
+        if (res.data) {
+          setUser(res.data.user);
+          navigate('/dashboard');
+        }
+      } catch (err) {
+        // Optionally handle error (e.g., show notification)
+        // console.error('Wallet sign-in failed:', err);
+        if (axios.isAxiosError(err)) {
+          console.error('Wallet connect failed:', err.response?.data?.error);
+
+        } else {
+          console.error('Unexpected error:', err);
+        }
+      }
+    };
+    signIn();
+  }, [isConnected])
   return (
     <main className="min-h-screen bg-black">
       {/* Header */}
@@ -21,14 +63,29 @@ export function Welcome() {
               <a href="#pricing" className="text-neutral-300 hover:text-white transition-colors">Pricing</a>
             </nav>
             <div className="flex items-center gap-4">
-              <Link 
-                to="/dashboard" 
-                className="text-neutral-300 hover:text-white transition-colors hidden md:block"
-              >
-                Sign In
-              </Link>
-              <Link 
-                to="/onboarding" 
+              <ConnectKitButton.Custom>
+                {({ isConnected, isConnecting, show, hide, address, ensName, chain }) => {
+                  return (
+                    <>
+                      <button
+                        className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors 
+                          hover:bg-neutral-700 text-white
+                          `}
+                        onClick={show}
+                      // disabled={isConnected}
+                      >
+                        <Wallet className="w-5 h-5" />
+                        {isConnected ? "Wallet Connected" : "Connect Wallet"}
+
+
+                      </button>
+
+                    </>
+                  );
+                }}
+              </ConnectKitButton.Custom>
+              <Link
+                to="/onboarding"
                 className="bg-green-500 hover:bg-green-600 text-black px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
               >
                 Get Started
@@ -63,13 +120,13 @@ export function Welcome() {
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-neutral-300 mb-12 max-w-4xl mx-auto leading-relaxed">
-            Create sophisticated DeFi strategies with our visual no-code builder. 
-            Connect triggers, conditions, and actions to automate your portfolio across 
+            Create sophisticated DeFi strategies with our visual no-code builder.
+            Connect triggers, conditions, and actions to automate your portfolio across
             multiple blockchains.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <Link 
-              to="/onboarding" 
+            <Link
+              to="/onboarding"
               className="bg-green-500 hover:bg-green-600 text-black px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-xl hover:shadow-green-500/25 transition-all flex items-center gap-2"
             >
               Start Building Free
@@ -93,11 +150,11 @@ export function Welcome() {
               Visual Automation Builder
             </h2>
             <p className="text-xl text-neutral-300 max-w-3xl mx-auto">
-              Drag, drop, and connect nodes to create powerful DeFi automations. 
+              Drag, drop, and connect nodes to create powerful DeFi automations.
               No coding required - just visual flow creation.
             </p>
           </div>
-          
+
           {/* Mock Automation Builder Interface */}
           <div className="bg-black border border-neutral-800 rounded-2xl p-8 mb-12">
             <div className="flex gap-8">
@@ -137,7 +194,7 @@ export function Welcome() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Canvas Mock */}
               <div className="flex-1 bg-black border border-neutral-800 rounded-lg relative min-h-80">
                 <div className="absolute inset-0 opacity-20">
@@ -162,10 +219,10 @@ export function Welcome() {
                         <span className="text-xs text-neutral-400">Configured</span>
                       </div>
                     </div>
-                    
+
                     {/* Arrow */}
                     <ChevronRight className="w-6 h-6 text-green-500" />
-                    
+
                     {/* Action Node */}
                     <div className="bg-neutral-800 border-2 border-purple-500/50 rounded-lg p-4 min-w-48">
                       <div className="flex items-center gap-2 mb-2">
@@ -183,10 +240,10 @@ export function Welcome() {
               </div>
             </div>
           </div>
-          
+
           <div className="text-center">
-            <Link 
-              to="/automations/create" 
+            <Link
+              to="/automations/create"
               className="inline-flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-6 py-3 rounded-lg font-medium transition-colors border border-neutral-600"
             >
               Try the Builder
@@ -276,7 +333,7 @@ export function Welcome() {
               Mix and match triggers, conditions, and actions to create unlimited automation possibilities.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {/* Triggers */}
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8">
@@ -296,7 +353,7 @@ export function Welcome() {
                 <div className="text-neutral-300">• Wallet Balance</div>
               </div>
             </div>
-            
+
             {/* Conditions */}
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8">
               <div className="flex items-center gap-3 mb-6">
@@ -318,7 +375,7 @@ export function Welcome() {
                 <div className="text-neutral-300">• Loss Limits</div>
               </div>
             </div>
-            
+
             {/* Actions */}
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8">
               <div className="flex items-center gap-3 mb-6">
@@ -355,15 +412,15 @@ export function Welcome() {
             Join the future of DeFi with intelligent automation that works 24/7 across multiple blockchains.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <Link 
-              to="/onboarding" 
+            <Link
+              to="/onboarding"
               className="bg-green-500 hover:bg-green-600 text-black px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-xl hover:shadow-green-500/25 transition-all flex items-center gap-2"
             >
               Get Started Free
               <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link 
-              to="/dashboard" 
+            <Link
+              to="/dashboard"
               className="border border-neutral-600 hover:border-green-500 text-white hover:text-green-400 px-8 py-4 rounded-xl text-lg font-semibold transition-all"
             >
               View Dashboard
@@ -403,7 +460,7 @@ const features = [
     highlight: "Build in minutes, not months",
     icon: (
       <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2L2 7v10c0 5.55 3.84 9.64 9 11 5.16-1.36 9-5.45 9-11V7l-10-5z"/>
+        <path d="M12 2L2 7v10c0 5.55 3.84 9.64 9 11 5.16-1.36 9-5.45 9-11V7l-10-5z" />
       </svg>
     )
   },
@@ -413,7 +470,7 @@ const features = [
     highlight: "5+ chains supported",
     icon: (
       <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
       </svg>
     )
   },
@@ -423,7 +480,7 @@ const features = [
     highlight: "Smart recommendations",
     icon: (
       <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-2V2c0-.55-.45-1-1-1s-1 .45-1 1v2H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-2V2c0-.55-.45-1-1-1s-1 .45-1 1v2H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" />
       </svg>
     )
   },
@@ -433,7 +490,7 @@ const features = [
     highlight: "19 node types available",
     icon: (
       <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
       </svg>
     )
   },
@@ -443,7 +500,7 @@ const features = [
     highlight: "Advanced protection",
     icon: (
       <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 1L3 5v6c0 5.55 3.84 9.64 9 11 5.16-1.36 9-5.45 9-11V5l-9-4zm-1 6h2v2h-2V7zm0 4h2v6h-2v-6z"/>
+        <path d="M12 1L3 5v6c0 5.55 3.84 9.64 9 11 5.16-1.36 9-5.45 9-11V5l-9-4zm-1 6h2v2h-2V7zm0 4h2v6h-2v-6z" />
       </svg>
     )
   },
@@ -453,7 +510,7 @@ const features = [
     highlight: "Best execution guaranteed",
     icon: (
       <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
       </svg>
     )
   }

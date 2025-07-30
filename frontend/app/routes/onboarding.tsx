@@ -1,6 +1,6 @@
 import type { Route } from "./+types/onboarding";
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
+import { redirect, useNavigate } from "react-router";
 import { User, Globe, Bell, Wallet, Check } from "lucide-react";
 import { ProgressBar } from "../components/onboarding/ProgressBar";
 import { FormCard } from "../components/onboarding/FormCard";
@@ -8,39 +8,63 @@ import { NavigationButtons } from "../components/onboarding/NavigationButtons";
 import { Step1Form } from "../components/onboarding/Step1Form";
 import { Step2Form } from "../components/onboarding/Step2Form";
 import { Step3Form } from "../components/onboarding/Step3Form";
+import { ConnectKitButton } from "connectkit";
+import { useAccount, useConnect, useSignMessage } from "wagmi";
+import { useAuth } from "~/auth/AuthProvider";
+import axiosInstance from "~/lib/axios";
+import axios from "axios";
+
+
 
 // --- New: ConnectWalletStep component ---
-function ConnectWalletStep({ connected, onConnect }: { connected: boolean; onConnect: () => void }) {
+function ConnectWalletStep({ onConnect }: { onConnect: () => void }) {
+  const { isConnected } = useAccount()
+  useEffect(() => {
+    if (isConnected) {
+      onConnect()
+    }
+  }, [isConnected])
+
   return (
     <FormCard icon={<Wallet size={30} />} title="Connect Your Wallet">
       <div className="flex flex-col items-center gap-6 py-4">
         <p className="text-neutral-500 text-center">
           To get started, please connect your crypto wallet. This will allow you to interact with DeFi automations.
         </p>
-        <button
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${
-            connected
-              ? "bg-green-600 text-white cursor-default"
-              : "bg-neutral-800 hover:bg-neutral-700 text-white"
-          }`}
-          onClick={onConnect}
-          disabled={connected}
-        >
-          <Wallet className="w-5 h-5" />
-          {connected ? "Wallet Connected" : "Connect Wallet"}
-          {connected && <Check className="w-5 h-5 text-green-300" />}
-        </button>
-        {connected && (
-          <div className="text-green-500 text-sm flex items-center gap-1">
-            <Check className="w-4 h-4" /> Connected!
-          </div>
-        )}
+        <ConnectKitButton.Custom>
+          {({ isConnected, isConnecting, show, hide, address, ensName, chain }) => {
+            return (
+              <>
+                <button
+                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${isConnected
+                    ? "bg-green-600 text-white cursor-default"
+                    : "bg-neutral-800 hover:bg-neutral-700 text-white"
+                    }`}
+                  onClick={show}
+                  disabled={isConnected}
+                >
+                  <Wallet className="w-5 h-5" />
+                  {isConnected ? "Wallet Connected" : "Connect Wallet"}
+                  {isConnected && <Check className="w-5 h-5 text-green-300" />}
+
+                </button>
+                {isConnected && (
+                  <div className="text-green-500 text-sm flex items-center gap-1">
+                    <Check className="w-4 h-4" /> Connected!
+                  </div>
+                )}
+              </>
+            );
+          }}
+        </ConnectKitButton.Custom>
+
+
       </div>
     </FormCard>
   );
 }
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ }: Route.MetaArgs) {
   return [
     { title: "Onboarding - 1Node DeFi Automations" },
     { name: "description", content: "Set up your account for automated DeFi strategies" },
@@ -50,6 +74,19 @@ export function meta({}: Route.MetaArgs) {
 export default function Onboarding() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [registering, setRegistering] = useState(false);
+  const [userRegisterError, setUserRegisterError] = useState('');
+
+  // Hooks
+  const { isConnected, address } = useAccount()
+  const { signMessageAsync } = useSignMessage()
+  const { user, setUser } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard')
+    }
+  }, [user])
 
   // New: Wallet connection state
   const [walletConnected, setWalletConnected] = useState(false);
@@ -78,7 +115,7 @@ export default function Onboarding() {
     setStep3Data(prev => ({ ...prev, [field]: value }));
   };
 
-  // New: Simulate wallet connect (replace with real wallet connect logic)
+
   const handleConnectWallet = () => {
     setWalletConnected(true);
   };
@@ -91,15 +128,15 @@ export default function Onboarding() {
 
   const TOTAL_STEPS = 4;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
     } else {
       // Submit form and redirect to dashboard
-      console.log('Submit', { step1Data, step2Data, step3Data });
+      await signIn()
       // TODO: Send data to backend
       // Redirect to dashboard after successful onboarding
-      navigate('/dashboard');
+      // navigate('/dashboard');
     }
   };
 
@@ -119,15 +156,69 @@ export default function Onboarding() {
     return false;
   };
 
+  const signIn = async () => {
+    const message = `Sign this message to authenticate. Timestamp: ${Date.now()}`
+    try {
+      setRegistering(true)
+      const signature = await signMessageAsync({ message })
+
+      // First, register the user (with email, username, etc.), then connect-wallet for authentication
+      // 1. Register user
+      // 1. Register user
+
+      const { data: registerRes, status } = await axiosInstance.post('/auth/register', {
+        walletAddress: address,
+        email: step1Data.email,
+        username: step1Data.username,
+        signature: signature,
+        message: message,
+      });
+
+
+
+      // If user already exists (409), continue silently
+      if (status !== 201 && status !== 409) {
+        // status 201 is "Created" (successful registration)
+        throw new Error(registerRes?.error || 'Registration failed');
+      }
+
+
+
+      const { data: AuthenticationSuccess } = await axiosInstance.post(
+        '/auth/connect-wallet',
+        {
+          walletAddress: address,
+          signature,
+          message,
+        }
+      );
+      if (AuthenticationSuccess) {
+        setUser(registerRes.user);
+        setRegistering(false)
+        navigate('/dashboard');
+      }
+
+
+    } catch (err) {
+      setRegistering(false)
+      if (axios.isAxiosError(err)) {
+        console.error('Wallet connect failed:', err.response?.data?.error);
+        setUserRegisterError(err.response?.data?.error)
+      } else {
+        console.error('Unexpected error:', err);
+      }
+    }
+  }
+
   const getStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <ConnectWalletStep connected={walletConnected} onConnect={handleConnectWallet} />
+          <ConnectWalletStep onConnect={handleConnectWallet} />
         );
       case 2:
         return (
-          <FormCard 
+          <FormCard
             icon={<User size={30} />}
             title="Basic Information"
           >
@@ -136,7 +227,7 @@ export default function Onboarding() {
         );
       case 3:
         return (
-          <FormCard 
+          <FormCard
             icon={<Globe size={30} />}
             title="Preferred Chains"
           >
@@ -145,11 +236,11 @@ export default function Onboarding() {
         );
       case 4:
         return (
-          <FormCard 
+          <FormCard
             icon={<Bell size={30} />}
             title="Notification Channels"
           >
-            <Step3Form formData={step3Data} onUpdate={handleStep3Update} />
+            <Step3Form formData={step3Data} onUpdate={handleStep3Update} error={userRegisterError} />
           </FormCard>
         );
       default:
@@ -177,12 +268,13 @@ export default function Onboarding() {
         {getStepContent()}
 
         {/* Navigation */}
-        <NavigationButtons 
+        <NavigationButtons
           onPrevious={handlePrevious}
           onNext={handleNext}
           previousDisabled={currentStep === 1}
           nextDisabled={isNextDisabled()}
           isLastStep={currentStep === TOTAL_STEPS}
+          loading={registering}
         />
       </div>
     </main>
