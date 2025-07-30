@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ChevronRight } from 'lucide-react';
+import type { Node } from '@xyflow/react';
 import { AppLayout } from '~/components/layout/AppLayout';
 import { AutomationFlow } from '~/components/automation/AutomationFlow';
 import { LeftSidebar } from '~/components/automation/LeftSidebar';
@@ -16,12 +17,12 @@ export default function CreateAutomation() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [automationStatus, setAutomationStatus] = useState<'draft' | 'deployed' | 'active'>('draft');
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
-
+  const unconnectedRef = useRef<Node[]>([]);
   const {
     nodes,
     edges,
   } = useAutomationStore();
-
+  const connectedNodeIds = new Set<string>();
   // Use a ref to always get the latest nodes in handleSave
   const nodesRef = useRef(nodes);
 
@@ -34,12 +35,36 @@ export default function CreateAutomation() {
   }, []);
 
   useEffect(() => {
-    console.log(nodes)
-  }, [nodes])
+    if (edges) {
+      edges.forEach((edge) => {
+        connectedNodeIds.add(edge.source);
+        connectedNodeIds.add(edge.target);
+      });
+    }
+
+
+    unconnectedRef.current = nodes.filter((node) => !connectedNodeIds.has(node.id));
+
+  }, [nodes, edges])
 
   const handleSave = useCallback(async () => {
     const currentNodes = nodesRef.current;
-    console.log(currentNodes)
+
+    console.log("unconnected: ", unconnectedRef.current)
+    if (unconnectedRef.current.length > 0) {
+      toast.error(`${unconnectedRef.current.length} node(s) are not connected.`, {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        transition: Bounce,
+      });
+      return
+    }
     // Save automation logic
     const trigger = currentNodes.find((n) => n.type === 'trigger');
     const action = currentNodes.find((n) => n.type === 'action');
@@ -58,7 +83,7 @@ export default function CreateAutomation() {
         theme: "dark",
         transition: Bounce,
       });
-      
+
       return;
     }
 
