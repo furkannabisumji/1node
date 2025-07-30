@@ -94,8 +94,18 @@ async function evaluatePriceTrigger(trigger: any, workflow: any): Promise<boolea
   const { tokenAddress, chainId, operator, threshold } = trigger.config;
   
   try {
+    // Validate inputs
+    if (!chainId || !tokenAddress) {
+      logger.warn('Missing chainId or tokenAddress in price trigger config', { 
+        chainId, 
+        tokenAddress, 
+        triggerId: trigger.id 
+      });
+      return false;
+    }
+
     // Get current token price
-    const priceData = await oneInchService.getTokenPrices(tokenAddress, chainId);
+    const priceData = await oneInchService.getTokenPrices(chainId, [tokenAddress]);
     const currentPrice = parseFloat(priceData[tokenAddress] || '0');
     const thresholdPrice = parseFloat(threshold);
 
@@ -258,8 +268,12 @@ async function updatePriceData(): Promise<void> {
     // Update prices for each unique token
     for (const token of uniqueTokens.values()) {
       try {
-        await oneInchService.getTokenPrices(token.address, token.chainId);
-        // Price is cached by the service
+        if (token.chainId && token.address) {
+          await oneInchService.getTokenPrices(token.chainId, [token.address]);
+          // Price is cached by the service
+        } else {
+          logger.warn('Invalid token data for price update', { token });
+        }
       } catch (error) {
         logger.warn(`Failed to update price for token ${token.address}:`, error);
       }

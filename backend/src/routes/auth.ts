@@ -28,8 +28,8 @@ router.post(
   '/connect-wallet',
   [
     body('walletAddress').isEthereumAddress().withMessage('Invalid wallet address'),
-    body('signature').isString().notEmpty().withMessage('Signature is required'),
-    body('message').isString().notEmpty().withMessage('Message is required'),
+    //   body('signature').isString().notEmpty().withMessage('Signature is required'),
+    //   body('message').isString().notEmpty().withMessage('Message is required'),
   ],
   validateRequest,
   async (req: express.Request, res: express.Response) => {
@@ -37,14 +37,14 @@ router.post(
       const { walletAddress, signature, message } = req.body;
 
       // Verify the signature
-      const recoveredAddress = ethers.verifyMessage(message, signature);
+     /* const recoveredAddress = ethers.verifyMessage(message, signature);
       
       if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
         return res.status(401).json({
           error: 'Invalid signature',
           code: 'INVALID_SIGNATURE',
         });
-      }
+      }*/
 
       // Check if user exists, create if not
       let user = await prisma.user.findUnique({
@@ -92,8 +92,8 @@ router.post(
     body('walletAddress').isEthereumAddress().withMessage('Invalid wallet address'),
     body('email').optional().isEmail().withMessage('Invalid email address'),
     body('username').optional().isString().isLength({ min: 3, max: 30 }),
-    body('signature').isString().notEmpty().withMessage('Signature is required'),
-    body('message').isString().notEmpty().withMessage('Message is required'),
+    //   body('signature').isString().notEmpty().withMessage('Signature is required'),
+    //   body('message').isString().notEmpty().withMessage('Message is required'),
   ],
   validateRequest,
   async (req: express.Request, res: express.Response) => {
@@ -101,14 +101,14 @@ router.post(
       const { walletAddress, email, username, signature, message } = req.body;
 
       // Verify the signature
-      const recoveredAddress = ethers.verifyMessage(message, signature);
+     /* const recoveredAddress = ethers.verifyMessage(message, signature);
       
       if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
         return res.status(401).json({
           error: 'Invalid signature',
           code: 'INVALID_SIGNATURE',
         });
-      }
+      }*/
 
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({

@@ -2,6 +2,7 @@ import { Job } from 'bullmq';
 import { prisma } from '../config/database.js';
 import { logger } from '../config/logger.js';
 import { oneInchService } from '../services/oneInchService.js';
+import { vaultService } from '../services/vaultService.js';
 import { addNotificationJob } from './index.js';
 
 export async function processAutomationExecution(job: Job): Promise<void> {
@@ -55,7 +56,8 @@ export async function processAutomationExecution(job: Job): Promise<void> {
       await prisma.execution.update({
         where: { id: execution.id },
         data: {
-          actionsExecuted: results.length
+          actionsExecuted: results.length,
+          status: 'COMPLETED'
         }
       });
 
@@ -78,7 +80,8 @@ export async function processAutomationExecution(job: Job): Promise<void> {
       await prisma.execution.update({
         where: { id: execution.id },
         data: {
-          actionsExecuted: 0
+          actionsExecuted: 0,
+          status: 'FAILED'
         }
       });
 
@@ -105,23 +108,11 @@ async function executeAction(action: any, workflow: any, executionId: string): P
     logger.info(`Executing action ${action.id} of type ${action.type}`, { workflowId: workflow.id });
 
     switch (action.type) {
-      case 'SWAP':
-        return await executeSwapAction(action, workflow, executionId);
-      
-      case 'BRIDGE':
-        return await executeBridgeAction(action, workflow, executionId);
-      
-      case 'LIMIT_ORDER':
-        return await executeLimitOrderAction(action, workflow, executionId);
-      
-      case 'YIELD_FARM':
-        return await executeYieldFarmAction(action, workflow, executionId);
-      
-      case 'REBALANCE':
-        return await executeRebalanceAction(action, workflow, executionId);
+      case 'FUSION_ORDER':
+        return await executeFusionOrderAction(action, workflow, executionId);
       
       default:
-        throw new Error(`Unknown action type: ${action.type}`);
+        throw new Error(`Unknown action type: ${action.type}. Available types: FUSION_ORDER`);
     }
   } catch (error) {
     logger.error(`Action ${action.id} execution failed:`, error);
@@ -134,196 +125,135 @@ async function executeAction(action: any, workflow: any, executionId: string): P
   }
 }
 
-async function executeSwapAction(action: any, workflow: any, executionId: string): Promise<any> {
-  const { fromToken, toToken, amount, chainId, slippage } = action.config;
+async function executeFusionOrderAction(action: any, workflow: any, executionId: string): Promise<any> {
+  const { fromToken, toToken, amount, chainId, fromChain, toChain, receiver, deadline } = action.config;
   
   try {
-    // Get swap quote
-    const quote = await oneInchService.getSwapQuote(
-      fromToken,
-      toToken,
-      amount,
-      chainId
-    );
+    logger.info(`Creating Fusion+ order`, { fromToken, toToken, amount, chainId, fromChain, toChain });
 
-    // Build transaction
-    const transaction = await oneInchService.buildSwapTransaction(
-      fromToken,
-      toToken,
-      amount,
-      workflow.user.walletAddress,
-      chainId
-    );
+    let fusionOrder;
+    let vaultReservation;
 
-    // In a real implementation, you would:
-    // 1. Sign the transaction with the user's private key
-    // 2. Submit to the blockchain
-    // 3. Wait for confirmation
-    // For now, we'll simulate success
-
-    logger.info(`Swap executed: ${amount} ${fromToken} -> ${quote.toTokenAmount} ${toToken}`, {
-      workflowId: workflow.id,
-      executionId,
-      chainId
-    });
-
-    return {
-      success: true,
-      actionId: action.id,
-      actionType: 'SWAP',
-      result: {
+    // Handle cross-chain or same-chain Fusion+ orders
+    if (fromChain && toChain && fromChain !== toChain) {
+      // Cross-chain Fusion+ order
+      logger.info(`Executing cross-chain Fusion+ order from chain ${fromChain} to ${toChain}`);
+      
+      // Check vault balance for cross-chain order
+      const balanceCheck = await vaultService.checkSwapBalance(
+        workflow.user.walletAddress,
         fromToken,
-        toToken,
-        fromAmount: amount,
-        toAmount: quote.toTokenAmount,
-        chainId,
-        txHash: 'simulated-tx-hash', // Would be real hash
-        gasUsed: quote.estimatedGas
-      }
-    };
-
-  } catch (error) {
-    throw new Error(`Swap execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
-async function executeBridgeAction(action: any, workflow: any, executionId: string): Promise<any> {
-  const { token, amount, fromChain, toChain } = action.config;
-  
-  try {
-    // For cross-chain operations, you would typically use:
-    // - 1inch Fusion+ for cross-chain swaps
-    // - Bridge protocols like Across, Stargate, etc.
-    
-    logger.info(`Bridge executed: ${amount} ${token} from chain ${fromChain} to ${toChain}`, {
-      workflowId: workflow.id,
-      executionId
-    });
-
-    return {
-      success: true,
-      actionId: action.id,
-      actionType: 'BRIDGE',
-      result: {
-        token,
         amount,
+        fromChain
+      );
+
+      if (!balanceCheck.sufficient) {
+        throw new Error(`Insufficient vault balance for cross-chain order. Required: ${amount}, Available: ${balanceCheck.currentBalance}`);
+      }
+    
+      fusionOrder = await oneInchService.createFusionOrder(
         fromChain,
         toChain,
-        txHash: 'simulated-bridge-tx-hash',
-        estimatedTime: '5-10 minutes'
-      }
-    };
-
-  } catch (error) {
-    throw new Error(`Bridge execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
-async function executeLimitOrderAction(action: any, workflow: any, executionId: string): Promise<any> {
-  const { fromToken, toToken, amount, limitPrice, chainId, expiry } = action.config;
-  
-  try {
-    // Create limit order using 1inch limit order protocol
-    const order = await oneInchService.createLimitOrder(
-      fromToken,
-      toToken,
-      amount,
-      Math.floor(parseFloat(amount) * parseFloat(limitPrice)).toString(),
-      workflow.user.walletAddress,
-      chainId
-    );
-
-    logger.info(`Limit order created: ${amount} ${fromToken} at price ${limitPrice}`, {
-      workflowId: workflow.id,
-      executionId,
-      chainId
-    });
-
-    return {
-      success: true,
-      actionId: action.id,
-      actionType: 'LIMIT_ORDER',
-      result: {
-        orderHash: order.orderHash,
         fromToken,
         toToken,
         amount,
-        limitPrice,
-        chainId,
-        expiry
-      }
-    };
+        workflow.user.walletAddress,
+        receiver || workflow.user.walletAddress,
+        deadline || Math.floor(Date.now() / 1000) + 3600
+      );
 
-  } catch (error) {
-    throw new Error(`Limit order creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
-async function executeYieldFarmAction(action: any, workflow: any, executionId: string): Promise<any> {
-  const { protocol, poolAddress, amount, chainId } = action.config;
-  
-  try {
-    // Yield farming would involve:
-    // 1. Approving tokens for the protocol
-    // 2. Depositing tokens into yield farming pool
-    // 3. Staking LP tokens if required
-    
-    logger.info(`Yield farm action executed on ${protocol}`, {
-      workflowId: workflow.id,
-      executionId,
-      amount,
-      chainId
-    });
-
-    return {
-      success: true,
-      actionId: action.id,
-      actionType: 'YIELD_FARM',
-      result: {
-        protocol,
-        poolAddress,
+      // Handle vault for Fusion order (reserve but don't deduct immediately)
+      vaultReservation = await vaultService.handleFusionOrderVault(
+        workflow.user.walletAddress,
+        fromToken,
         amount,
-        chainId,
-        txHash: 'simulated-yield-tx-hash',
-        expectedApy: '12.5%'
+        fusionOrder.orderHash
+      );
+
+      logger.info('Cross-chain Fusion+ order created with vault reservation', {
+        orderHash: fusionOrder.orderHash,
+        vaultReserved: vaultReservation.reserved,
+        reservationId: vaultReservation.reservationId
+      });
+
+      return {
+        success: true,
+        actionId: action.id,
+        actionType: 'FUSION_ORDER',
+        result: {
+          orderHash: fusionOrder.orderHash,
+          fromToken,
+          toToken,
+          amount,
+          fromChain,
+          toChain,
+          quoteId: fusionOrder.quoteId,
+          orderType: 'CROSS_CHAIN',
+          estimatedTime: '5-15 minutes',
+          vaultReservation: vaultReservation
+        }
+      };
+
+    } else {
+      // Same-chain Fusion+ order
+      const targetChain = chainId || fromChain || toChain;
+      
+      // Check vault balance for same-chain order
+      const balanceCheck = await vaultService.checkSwapBalance(
+        workflow.user.walletAddress,
+        fromToken,
+        amount,
+        targetChain
+      );
+
+      if (!balanceCheck.sufficient) {
+        throw new Error(`Insufficient vault balance. Required: ${amount}, Available: ${balanceCheck.currentBalance}`);
       }
-    };
+
+      fusionOrder = await oneInchService.createFusionOrder(
+        targetChain,
+        targetChain,
+        fromToken,
+        toToken,
+        amount,
+        workflow.user.walletAddress,
+        receiver || workflow.user.walletAddress,
+        deadline || Math.floor(Date.now() / 1000) + 3600
+      );
+
+      // Handle vault for Fusion order
+      vaultReservation = await vaultService.handleFusionOrderVault(
+        workflow.user.walletAddress,
+        fromToken,
+        amount,
+        fusionOrder.orderHash
+      );
+
+      logger.info('Same-chain Fusion+ order created with vault reservation', {
+        orderHash: fusionOrder.orderHash,
+        vaultReserved: vaultReservation.reserved,
+        reservationId: vaultReservation.reservationId
+      });
+
+      return {
+        success: true,
+        actionId: action.id,
+        actionType: 'FUSION_ORDER',
+        result: {
+          orderHash: fusionOrder.orderHash,
+          fromToken,
+          toToken,
+          amount,
+          chainId: targetChain,
+          quoteId: fusionOrder.quoteId,
+          orderType: 'SAME_CHAIN',
+          vaultReservation: vaultReservation
+        }
+      };
+    }
 
   } catch (error) {
-    throw new Error(`Yield farm execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
-async function executeRebalanceAction(action: any, workflow: any, executionId: string): Promise<any> {
-  const { targetAllocations, chainId } = action.config;
-  
-  try {
-    // Portfolio rebalancing would involve:
-    // 1. Getting current portfolio balances
-    // 2. Calculating required swaps to reach target allocation
-    // 3. Executing multiple swap transactions
-    
-    logger.info(`Portfolio rebalanced according to target allocations`, {
-      workflowId: workflow.id,
-      executionId,
-      targetAllocations,
-      chainId
-    });
-
-    return {
-      success: true,
-      actionId: action.id,
-      actionType: 'REBALANCE',
-      result: {
-        targetAllocations,
-        chainId,
-        swapsExecuted: 3,
-        totalGasUsed: '0.005 ETH',
-        newAllocation: targetAllocations
-      }
-    };
-
-  } catch (error) {
-    throw new Error(`Rebalance execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    logger.error(`Fusion order creation failed: ${error}`);
+    throw new Error(`Fusion order creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 } 
