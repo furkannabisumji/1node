@@ -42,12 +42,7 @@ router.post(
     body('trigger.config').isObject(),
     body('action').isObject(),
     body('action.type').isIn([
-      'SWAP',
-      'TRANSFER',
-      'CROSS_CHAIN_SWAP',
-      'STAKE',
-      'PROVIDE_LIQUIDITY',
-      'SEND_NOTIFICATION',
+      'FUSION_ORDER',
     ]),
     body('action.chainId').optional().isInt({ min: 1 }),
     body('action.config').isObject(),

@@ -1,7 +1,4 @@
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
+import 'dotenv/config';
 
 interface Config {
   // Server
@@ -21,11 +18,13 @@ interface Config {
   oneInchBaseUrl: string;
 
   // Blockchain RPC URLs
-  ethereumRpcUrl: string;
-  polygonRpcUrl: string;
+  alchemyApiKey: string;
 
   // Private keys
   executorPrivateKey: string;
+
+  // Smart Contracts
+  vaultContractAddress: string;
 
   // AI Services
   openaiApiKey: string;
@@ -52,7 +51,7 @@ function validateConfig(): Config {
     'DATABASE_URL',
     'JWT_SECRET',
     'ONEINCH_API_KEY',
-    'ETHEREUM_RPC_URL',
+    'ALCHEMY_API_KEY',
   ];
 
   const missing = requiredEnvVars.filter(envVar => !process.env[envVar]);
@@ -79,11 +78,13 @@ function validateConfig(): Config {
     oneInchBaseUrl: process.env.ONEINCH_BASE_URL || 'https://api.1inch.dev',
 
     // Blockchain RPC URLs
-    ethereumRpcUrl: process.env.ETHEREUM_RPC_URL!,
-    polygonRpcUrl: process.env.POLYGON_RPC_URL || '',
+    alchemyApiKey: process.env.ALCHEMY_API_KEY!,
 
     // Private keys
     executorPrivateKey: process.env.EXECUTOR_PRIVATE_KEY || '',
+
+    // Smart Contracts
+    vaultContractAddress: process.env.VAULT_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000',
 
     // AI Services
     openaiApiKey: process.env.OPENAI_API_KEY || '',
@@ -112,16 +113,33 @@ export const SUPPORTED_CHAINS = {
   ETHEREUM: {
     id: 1,
     name: 'Ethereum',
-    rpcUrl: config.ethereumRpcUrl,
+    rpcUrl: `https://eth-mainnet.g.alchemy.com/v2/${config.alchemyApiKey}`,
     nativeCurrency: 'ETH',
   },
   POLYGON: {
     id: 137,
     name: 'Polygon',
-    rpcUrl: config.polygonRpcUrl,
+    rpcUrl: `https://polygon-mainnet.g.alchemy.com/v2/${config.alchemyApiKey}`,
     nativeCurrency: 'MATIC',
   },
-
+  OPTIMISM: {
+    id: 10,
+    name: 'Optimism',
+    rpcUrl: `https://opt-mainnet.g.alchemy.com/v2/${config.alchemyApiKey}`,
+    nativeCurrency: 'ETH',
+  },
+  ARBITRUM: {
+    id: 42161,
+    name: 'Arbitrum',
+    rpcUrl: `https://arb-mainnet.g.alchemy.com/v2/${config.alchemyApiKey}`,
+    nativeCurrency: 'ETH',
+  },
+  BASE: {
+    id: 8453,
+    name: 'Base',
+    rpcUrl: `https://base-mainnet.g.alchemy.com/v2/${config.alchemyApiKey}`,
+    nativeCurrency: 'ETH',
+  },
 } as const;
 
 export type SupportedChainId = keyof typeof SUPPORTED_CHAINS; 
