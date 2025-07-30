@@ -1,13 +1,44 @@
 import type { Route } from "./+types/onboarding";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { User, Globe, Bell, Check } from "lucide-react";
+import { User, Globe, Bell, Wallet, Check } from "lucide-react";
 import { ProgressBar } from "../components/onboarding/ProgressBar";
 import { FormCard } from "../components/onboarding/FormCard";
 import { NavigationButtons } from "../components/onboarding/NavigationButtons";
 import { Step1Form } from "../components/onboarding/Step1Form";
 import { Step2Form } from "../components/onboarding/Step2Form";
 import { Step3Form } from "../components/onboarding/Step3Form";
+
+// --- New: ConnectWalletStep component ---
+function ConnectWalletStep({ connected, onConnect }: { connected: boolean; onConnect: () => void }) {
+  return (
+    <FormCard icon={<Wallet size={30} />} title="Connect Your Wallet">
+      <div className="flex flex-col items-center gap-6 py-4">
+        <p className="text-neutral-500 text-center">
+          To get started, please connect your crypto wallet. This will allow you to interact with DeFi automations.
+        </p>
+        <button
+          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${
+            connected
+              ? "bg-green-600 text-white cursor-default"
+              : "bg-neutral-800 hover:bg-neutral-700 text-white"
+          }`}
+          onClick={onConnect}
+          disabled={connected}
+        >
+          <Wallet className="w-5 h-5" />
+          {connected ? "Wallet Connected" : "Connect Wallet"}
+          {connected && <Check className="w-5 h-5 text-green-300" />}
+        </button>
+        {connected && (
+          <div className="text-green-500 text-sm flex items-center gap-1">
+            <Check className="w-4 h-4" /> Connected!
+          </div>
+        )}
+      </div>
+    </FormCard>
+  );
+}
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -19,6 +50,10 @@ export function meta({}: Route.MetaArgs) {
 export default function Onboarding() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+
+  // New: Wallet connection state
+  const [walletConnected, setWalletConnected] = useState(false);
+
   const [step1Data, setStep1Data] = useState({
     username: '',
     email: '',
@@ -43,14 +78,21 @@ export default function Onboarding() {
     setStep3Data(prev => ({ ...prev, [field]: value }));
   };
 
+  // New: Simulate wallet connect (replace with real wallet connect logic)
+  const handleConnectWallet = () => {
+    setWalletConnected(true);
+  };
+
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
 
+  const TOTAL_STEPS = 4;
+
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
     } else {
       // Submit form and redirect to dashboard
@@ -63,12 +105,15 @@ export default function Onboarding() {
 
   const isNextDisabled = () => {
     if (currentStep === 1) {
-      return !step1Data.username || !step1Data.email || !step1Data.riskTolerance;
+      return !walletConnected;
     }
     if (currentStep === 2) {
-      return step2Data.length === 0;
+      return !step1Data.username || !step1Data.email || !step1Data.riskTolerance;
     }
     if (currentStep === 3) {
+      return step2Data.length === 0;
+    }
+    if (currentStep === 4) {
       return step3Data.emailNotifications && !step3Data.notificationEmail;
     }
     return false;
@@ -78,6 +123,10 @@ export default function Onboarding() {
     switch (currentStep) {
       case 1:
         return (
+          <ConnectWalletStep connected={walletConnected} onConnect={handleConnectWallet} />
+        );
+      case 2:
+        return (
           <FormCard 
             icon={<User size={30} />}
             title="Basic Information"
@@ -85,7 +134,7 @@ export default function Onboarding() {
             <Step1Form formData={step1Data} onUpdate={handleStep1Update} />
           </FormCard>
         );
-      case 2:
+      case 3:
         return (
           <FormCard 
             icon={<Globe size={30} />}
@@ -94,7 +143,7 @@ export default function Onboarding() {
             <Step2Form selectedChains={step2Data} onUpdate={handleStep2Update} />
           </FormCard>
         );
-      case 3:
+      case 4:
         return (
           <FormCard 
             icon={<Bell size={30} />}
@@ -122,7 +171,7 @@ export default function Onboarding() {
         </div>
 
         {/* Progress Indicator */}
-        <ProgressBar currentStep={currentStep} totalSteps={3} />
+        <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
 
         {/* Dynamic Form Content */}
         {getStepContent()}
@@ -133,7 +182,7 @@ export default function Onboarding() {
           onNext={handleNext}
           previousDisabled={currentStep === 1}
           nextDisabled={isNextDisabled()}
-          isLastStep={currentStep === 3}
+          isLastStep={currentStep === TOTAL_STEPS}
         />
       </div>
     </main>

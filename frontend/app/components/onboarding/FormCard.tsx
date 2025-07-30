@@ -9,7 +9,7 @@ interface FormCardProps {
 export function FormCard({ icon, title, children }: FormCardProps) {
   return (
     <div className="border-neutral-50 bg-neutral-900/50 rounded-xl p-8 shadow-lg">
-      <div className="flex items-center mb-6">
+      <div className="flex items-center justify-center mb-6">
         <div className="w-6 h-6 rounded-full flex items-center justify-center mr-3">
           {icon}
         </div>
