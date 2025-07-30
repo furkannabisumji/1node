@@ -28,8 +28,8 @@ router.post(
   '/connect-wallet',
   [
     body('walletAddress').isEthereumAddress().withMessage('Invalid wallet address'),
-    body('signature').isString().notEmpty().withMessage('Signature is required'),
-    body('message').isString().notEmpty().withMessage('Message is required'),
+    //   body('signature').isString().notEmpty().withMessage('Signature is required'),
+    //   body('message').isString().notEmpty().withMessage('Message is required'),
   ],
   validateRequest,
   async (req: express.Request, res: express.Response) => {
@@ -37,7 +37,9 @@ router.post(
       const { walletAddress, signature, message } = req.body;
 
       // Verify the signature
-      const recoveredAddress = ethers.verifyMessage(message, signature);
+
+     const recoveredAddress = ethers.verifyMessage(message, signature);
+      
 
       if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
         return res.status(401).json({
@@ -67,8 +69,10 @@ router.post(
 
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        secure: true,
+          path: '/',
+          sameSite: 'none',
+          maxAge: 3600000,
       }).json({
         message: 'Authentication successful'
       });
@@ -92,8 +96,8 @@ router.post(
     body('walletAddress').isEthereumAddress().withMessage('Invalid wallet address'),
     body('email').optional().isEmail().withMessage('Invalid email address'),
     body('username').optional().isString().isLength({ min: 3, max: 30 }),
-    body('signature').isString().notEmpty().withMessage('Signature is required'),
-    body('message').isString().notEmpty().withMessage('Message is required'),
+    //   body('signature').isString().notEmpty().withMessage('Signature is required'),
+    //   body('message').isString().notEmpty().withMessage('Message is required'),
   ],
   validateRequest,
   async (req: express.Request, res: express.Response) => {
@@ -101,7 +105,9 @@ router.post(
       const { walletAddress, email, username, signature, message } = req.body;
 
       // Verify the signature
-      const recoveredAddress = ethers.verifyMessage(message, signature);
+
+     const recoveredAddress = ethers.verifyMessage(message, signature);
+      
 
       if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
         return res.status(401).json({
