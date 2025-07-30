@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import {Menu, User, PanelRight, Bell, ChevronDown} from 'lucide-react';
+import { Menu, User, PanelRight, Bell, ChevronDown } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { AccountSettingsModal } from '../modals/AccountSettingsModal';
+import axiosInstance from '~/lib/axios';
+import axios from 'axios';
+import { useAuth } from '~/auth/AuthProvider';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -15,8 +18,8 @@ const getPageTitle = (pathname: string): string => {
       return 'Dashboard';
     case '/automations':
       return 'Automations';
-      case '/automations/create':
-        return 'Automation Builder';
+    case '/automations/create':
+      return 'Automation Builder';
     case '/settings':
       return 'Settings';
     case '/help':
@@ -30,7 +33,24 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [showWalletDropdown, setShowWalletDropdown] = useState(false)
+  const { setUser } = useAuth()
+  const handleLogout = async () => {
+    try {
 
+      await axiosInstance.post('/auth/logout')
+
+      setUser(null)
+
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        console.error('Wallet connect failed:', err.response?.data?.error);
+
+      } else {
+        console.error('Unexpected error:', err);
+      }
+    }
+  }
   return (
     <header className="bg-black border-b border-neutral-800 h-16 flex items-center justify-between px-4 lg:px-6">
       {/* Left section with sidebar toggle */}
@@ -68,7 +88,7 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
       {/* Right section with user actions */}
       <div className="flex items-center gap-2">
         {/* User icon */}
-        <button 
+        <button
           onClick={() => setIsAccountModalOpen(true)}
           className="p-2 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
         >
@@ -83,14 +103,29 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
         </button>
 
         {/* Wallet Connection Button */}
-        <button className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-3 py-2 rounded-lg transition-colors border border-neutral-600">
-          <span className="text-sm font-medium">0x3AdE67...780</span>
-          <ChevronDown className="h-4 w-4 text-neutral-400" />
-        </button>
+        <div className="relative">
+          <button
+            className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-3 py-2 rounded-lg transition-colors border border-neutral-600"
+            onClick={() => setShowWalletDropdown((prev) => !prev)}
+          >
+            <span className="text-sm font-medium">0x3AdE67...780</span>
+            <ChevronDown className="h-4 w-4 text-neutral-400" />
+          </button>
+          {showWalletDropdown && (
+            <div className="absolute right-0 mt-2 w-40 bg-neutral-900 border border-neutral-700 rounded-lg shadow-lg z-50">
+              <button
+                className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-neutral-800 rounded-t-lg"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Account Settings Modal */}
-      <AccountSettingsModal 
+      <AccountSettingsModal
         isOpen={isAccountModalOpen}
         onClose={() => setIsAccountModalOpen(false)}
       />
