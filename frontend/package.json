@@ -21,8 +21,10 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.7.1",
+    "react-toastify": "^11.0.5",
     "viem": "~2.33.1",
-    "wagmi": "^2.16.0"
+    "wagmi": "^2.16.0",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@react-router/dev": "^7.7.1",
