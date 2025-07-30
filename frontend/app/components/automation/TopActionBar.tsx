@@ -50,22 +50,7 @@ export function TopActionBar({ status, onSave, onDeploy }: TopActionBarProps) {
             </>
           )}
 
-          {/* Secondary Actions */}
-          <div className="flex items-center gap-2 ml-2">
-            <button className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors">
-              <Eye className="w-4 h-4" />
-              Simulation
-            </button>
-            <button className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors">
-              <AlertTriangle className="w-4 h-4" />
-              Requirements
-            </button>
-            <button className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors">
-              <BotIcon
-                className="w-4 h-4" />
-              AI Insights
-            </button>
-          </div>
+          
         </div>
       </div>
     </div>
