@@ -5,6 +5,7 @@ import { AccountSettingsModal } from '../modals/AccountSettingsModal';
 import axiosInstance from '~/lib/axios';
 import axios from 'axios';
 import { useAuth } from '~/auth/AuthProvider';
+import formatAddress from '~/utils/formatAddress';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -34,7 +35,8 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
   const pageTitle = getPageTitle(location.pathname);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [showWalletDropdown, setShowWalletDropdown] = useState(false)
-  const { setUser } = useAuth()
+  const { user, setUser } = useAuth()
+
   const handleLogout = async () => {
     try {
 
@@ -108,7 +110,9 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
             className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-3 py-2 rounded-lg transition-colors border border-neutral-600"
             onClick={() => setShowWalletDropdown((prev) => !prev)}
           >
-            <span className="text-sm font-medium">0x3AdE67...780</span>
+            {user && (
+              <span className="text-sm font-medium">{user.username ? user.username : formatAddress(user.walletAddress)}</span>
+            )}
             <ChevronDown className="h-4 w-4 text-neutral-400" />
           </button>
           {showWalletDropdown && (

@@ -17,8 +17,8 @@ export const AuthProvider = ({ children }) => {
     const fetchUser = async () => {
         try {
             const { data } = await axiosInstance.get('/auth/me')
-            
-            setUser(data)
+
+            setUser(data.user)
         } catch (err) {
             setUser(null)
         }
