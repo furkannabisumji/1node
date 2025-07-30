@@ -151,6 +151,16 @@ async function executeFusionOrderAction(action: any, workflow: any, executionId:
         throw new Error(`Insufficient vault balance for cross-chain order. Required: ${amount}, Available: ${balanceCheck.currentBalance}`);
       }
     
+      logger.info('Creating cross-chain Fusion order with parameters:', {
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+        amount,
+        maker: workflow.user.walletAddress,
+        receiver: receiver || workflow.user.walletAddress
+      });
+
       fusionOrder = await oneInchService.createFusionOrder(
         fromChain,
         toChain,
@@ -209,6 +219,15 @@ async function executeFusionOrderAction(action: any, workflow: any, executionId:
       if (!balanceCheck.sufficient) {
         throw new Error(`Insufficient vault balance. Required: ${amount}, Available: ${balanceCheck.currentBalance}`);
       }
+
+      logger.info('Creating same-chain Fusion order with parameters:', {
+        targetChain,
+        fromToken,
+        toToken,
+        amount,
+        maker: workflow.user.walletAddress,
+        receiver: receiver || workflow.user.walletAddress
+      });
 
       fusionOrder = await oneInchService.createFusionOrder(
         targetChain,

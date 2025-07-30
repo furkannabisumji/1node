@@ -345,28 +345,50 @@ class OneInchService {
     deadline?: number
   ): Promise<FusionOrder> {
     try {
-      logger.debug('Creating Fusion+ order', {
+      // Validate required parameters
+      if (!maker || maker === '0x0000000000000000000000000000000000000000') {
+        throw new Error('Valid maker wallet address is required for Fusion+ orders');
+      }
+
+      // Validate wallet address format
+      if (!/^0x[a-fA-F0-9]{40}$/.test(maker)) {
+        throw new Error(`Invalid wallet address format: ${maker}`);
+      }
+
+      // Ensure wallet address is checksummed (proper case)
+      const checksummedMaker = ethers.getAddress(maker);
+
+      logger.info('Creating Fusion+ order', {
         fromChainId,
         toChainId,
         fromTokenAddress,
         toTokenAddress,
         amount,
-        maker
+        maker: checksummedMaker
       });
 
       // Use correct Fusion+ API endpoints
       try {
         const quoteUrl = `${this.baseUrl}/fusion-plus/quoter/v1.0/quote/build`;
-        logger.debug('Making quote request to:', { url: quoteUrl, fromChainId, toChainId });
+        logger.info('Making quote request to:', { url: quoteUrl, fromChainId, toChainId });
         
         // First get a quote to build the order properly
+        logger.info('Quote request payload:', {
+          srcChainId: fromChainId,
+          dstChainId: toChainId,
+          srcTokenAddress: fromTokenAddress,
+          dstTokenAddress: toTokenAddress,
+          amount: amount,
+          walletAddress: checksummedMaker
+        });
+
         const quoteResponse = await axios.post(quoteUrl, {
           srcChainId: fromChainId,
           dstChainId: toChainId,
           srcTokenAddress: fromTokenAddress,
           dstTokenAddress: toTokenAddress,
           amount: amount,
-          walletAddress: maker
+          walletAddress: checksummedMaker
         }, {
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
@@ -378,20 +400,24 @@ class OneInchService {
         
         // Submit the order using the correct relayer API endpoint
         const submitUrl = `${this.baseUrl}/fusion-plus/relayer/v1.0/submit`;
-        logger.debug('Making order submission request to:', { url: submitUrl });
+        logger.info('Making order submission request to:', { url: submitUrl });
         
-        const response = await axios.post(submitUrl, {
+        const orderPayload = {
           order: {
-            maker,
+            maker: checksummedMaker,
             makerAsset: fromTokenAddress,
             takerAsset: toTokenAddress,
             makingAmount: amount,
             takingAmount: quote.dstTokenAmount || amount,
-            receiver: receiver || maker
+            receiver: receiver || checksummedMaker
           },
           signature: '0x', // Placeholder signature
           quoteId: quote.quoteId || Date.now().toString()
-        }, {
+        };
+
+        logger.info('Order submission payload:', orderPayload);
+        
+        const response = await axios.post(submitUrl, orderPayload, {
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json'
@@ -403,17 +429,17 @@ class OneInchService {
         const fusionOrder: FusionOrder = {
           orderHash: order.orderHash || ethers.randomBytes(32).toString(),
           order: {
-            maker: maker,
+            maker: checksummedMaker,
             makerAsset: fromTokenAddress,
             takingAmount: amount,
             makingAmount: amount,
-            receiver: receiver || maker
+            receiver: receiver || checksummedMaker
           },
           signature: order.signature || '0x',
           quoteId: order.quoteId || Date.now().toString()
         };
 
-        logger.debug('Successfully created Fusion+ order via API');
+        logger.info('Successfully created Fusion+ order via API');
         return fusionOrder;
 
       } catch (apiError: any) {
@@ -428,17 +454,17 @@ class OneInchService {
         const fusionOrder: FusionOrder = {
           orderHash: ethers.randomBytes(32).toString(),
           order: {
-            maker: maker,
+            maker: checksummedMaker,
             makerAsset: fromTokenAddress,
             takingAmount: amount,
             makingAmount: amount, // Simplified 1:1 ratio
-            receiver: receiver || maker
+            receiver: receiver || checksummedMaker
           },
           signature: '0x',
           quoteId: Date.now().toString()
         };
 
-        logger.debug('Successfully created Fusion+ order with fallback');
+        logger.info('Successfully created Fusion+ order with fallback');
         return fusionOrder;
       }
 

@@ -43,7 +43,7 @@ class Application {
   private initializeMiddleware(): void {
     // CORS configuration
     this.app.use(cors({
-      origin: config.corsOrigin,
+      origin: ['http://localhost:3000', config.corsOrigin],
       credentials: true,
     }));
 

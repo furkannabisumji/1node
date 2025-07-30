@@ -1,16 +1,7 @@
 import { ethers } from 'ethers';
 import { config, SUPPORTED_CHAINS } from '../config/index.js';
 import { logger } from '../config/logger.js';
-import { prisma } from '../config/database.js';
-
-// Vault contract ABI - just the functions we need
-const VAULT_ABI = [
-  "function balances(address user, address token) view returns (uint256)",
-  "function updateBalance(address token, address user, uint256 amount)",
-  "function getBalance(address token) view returns (uint256)",
-  "function isWhitelistedToken(address token) view returns (bool)",
-  "event Withdrawal(address indexed token, address indexed user, uint256 amount)"
-];
+import VAULT_ABI from '../config/abi.json' with { type: 'json' };
 
 export interface VaultBalance {
   token: string;
@@ -34,7 +25,7 @@ class VaultService {
 
   constructor() {
     // Initialize provider and contract
-    this.provider = new ethers.JsonRpcProvider(SUPPORTED_CHAINS.ETHEREUM.rpcUrl);
+    this.provider = new ethers.JsonRpcProvider(SUPPORTED_CHAINS.OPTIMISM.rpcUrl);
     this.executorWallet = new ethers.Wallet(config.executorPrivateKey, this.provider);
     
     // Use vault contract address from config
