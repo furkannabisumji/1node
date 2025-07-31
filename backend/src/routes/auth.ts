@@ -363,7 +363,12 @@ router.post('/logout', authenticateToken, async (req: express.Request, res: expr
     
     logger.info(`User logged out: ${userId}`);
 
-    res.json({
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: true,
+      path: '/',
+      sameSite: 'none',
+    }).json({
       message: 'Logged out successfully',
     });
   } catch (error) {
