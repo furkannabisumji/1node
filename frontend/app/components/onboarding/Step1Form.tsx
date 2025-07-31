@@ -67,7 +67,7 @@ export function Step1Form({ formData, onUpdate }: Step1FormProps) {
           Risk Tolerance
         </label>
         <div className="grid grid-cols-3 gap-3">
-          {['Conservative', 'Moderate', 'Aggressive'].map((risk) => (
+          {['LOW', 'MEDIUM', 'HIGH'].map((risk) => (
             <button
               key={risk}
               onClick={() => onUpdate('riskTolerance', risk)}

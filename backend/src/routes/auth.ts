@@ -37,14 +37,16 @@ router.post(
       const { walletAddress, signature, message } = req.body;
 
       // Verify the signature
-     /* const recoveredAddress = ethers.verifyMessage(message, signature);
+
+     const recoveredAddress = ethers.verifyMessage(message, signature);
       
+
       if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
         return res.status(401).json({
           error: 'Invalid signature',
           code: 'INVALID_SIGNATURE',
         });
-      }*/
+      }
 
       // Check if user exists, create if not
       let user = await prisma.user.findUnique({
@@ -107,14 +109,16 @@ router.post(
       const { walletAddress, email, username, preferredChains, riskTolerance, notificationPrefs, signature, message } = req.body;
 
       // Verify the signature
-     /* const recoveredAddress = ethers.verifyMessage(message, signature);
+
+     const recoveredAddress = ethers.verifyMessage(message, signature);
       
+
       if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
         return res.status(401).json({
           error: 'Invalid signature',
           code: 'INVALID_SIGNATURE',
         });
-      }*/
+      }
 
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({

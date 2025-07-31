@@ -16,6 +16,7 @@ import { TriggerNode } from './nodes/TriggerNode';
 import { ActionNode } from './nodes/ActionNode';
 import { ConditionNode } from './nodes/ConditionNode';
 import { NodeConfigModal } from './NodeConfigModal';
+import { useAutomationStore } from '~/stores/useAutomationStore';
 
 const nodeTypes = {
   trigger: TriggerNode,
@@ -42,6 +43,11 @@ export function AutomationFlow() {
     nodeLabel: '',
   });
 
+  const {
+    setNodesFlow,
+    setEdgesFlow
+  } = useAutomationStore();
+
   const handleNodeConfigure = useCallback((nodeData: any, nodeType: 'trigger' | 'condition' | 'action') => {
     console.log('Configure node:', { nodeData, nodeType, label: nodeData.label });
     setConfigModal({
@@ -51,8 +57,15 @@ export function AutomationFlow() {
     });
   }, []);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(createInitialNodes(handleNodeConfigure, () => {}));
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(createInitialNodes(handleNodeConfigure, () => { }));
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  useEffect(() => {
+    setNodesFlow(nodes)
+    setEdgesFlow(edges)
+  }, [nodes, edges])
+
 
   const handleNodeDelete = useCallback((nodeId: string) => {
     setNodes((nds) => nds.filter((node) => node.id !== nodeId));
@@ -61,7 +74,14 @@ export function AutomationFlow() {
 
   const handleConfigSave = useCallback((config: any) => {
     // Here you would update the node with the new configuration
-    console.log('Saving node configuration:', config);
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.selected
+          ? { ...node, data: { ...node.data, config } }
+          : node
+      )
+    );
+   
   }, []);
 
   // Handle keyboard shortcuts
@@ -124,11 +144,12 @@ export function AutomationFlow() {
         type: nodeData.type,
         position,
         selected: false,
-        data: { 
+        data: {
           label: nodeData.data.label,
           description: `Configure ${nodeData.data.label}`,
           status: 'unconfigured',
           nodeType: nodeData.type as 'trigger' | 'condition' | 'action',
+          type: nodeData.data.label === "Price Change" ? 'PRICE_THRESHOLD' : nodeData.data.label === 'Swap Tokens' && 'FUSION_ORDER',
           onConfigure: (data: any) => handleNodeConfigure(data, data.nodeType),
           onDelete: handleNodeDelete
         },
@@ -167,7 +188,7 @@ export function AutomationFlow() {
         selectNodesOnDrag={false}
         style={{ background: '#000000' }}
       >
-        <Background 
+        <Background
           variant={BackgroundVariant.Dots}
           gap={20}
           size={1}
