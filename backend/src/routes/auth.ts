@@ -94,13 +94,17 @@ router.post(
     body('walletAddress').isEthereumAddress().withMessage('Invalid wallet address'),
     body('email').optional().isEmail().withMessage('Invalid email address'),
     body('username').optional().isString().isLength({ min: 3, max: 30 }),
+    body('preferredChains').optional().isArray().withMessage('Preferred chains must be an array'),
+    body('preferredChains.*').optional().isString().withMessage('Each chain must be a string'),
+    body('riskTolerance').optional().isIn(['LOW', 'MEDIUM', 'HIGH']).withMessage('Risk tolerance must be LOW, MEDIUM, or HIGH'),
+    body('notificationPrefs').optional().isObject().withMessage('Notification preferences must be an object'),
     //   body('signature').isString().notEmpty().withMessage('Signature is required'),
     //   body('message').isString().notEmpty().withMessage('Message is required'),
   ],
   validateRequest,
   async (req: express.Request, res: express.Response) => {
     try {
-      const { walletAddress, email, username, signature, message } = req.body;
+      const { walletAddress, email, username, preferredChains, riskTolerance, notificationPrefs, signature, message } = req.body;
 
       // Verify the signature
      /* const recoveredAddress = ethers.verifyMessage(message, signature);
@@ -144,13 +148,23 @@ router.post(
           walletAddress: walletAddress.toLowerCase(),
           email,
           username,
+          preferredChains: preferredChains || [],
+          riskTolerance: riskTolerance || 'MEDIUM',
+          notificationPrefs: notificationPrefs || {},
         },
       });
 
       // Generate JWT token
       const token = generateToken(user.id, user.walletAddress, user.email || undefined);
 
-      logger.info(`New user registered: ${user.id}`, { walletAddress, email });
+      logger.info(`New user registered: ${user.id}`, { 
+        walletAddress, 
+        email, 
+        username,
+        preferredChains: user.preferredChains,
+        riskTolerance: user.riskTolerance,
+        hasNotificationPrefs: !!notificationPrefs
+      });
 
       res.status(201).json({
         message: 'User registered successfully',
@@ -162,6 +176,7 @@ router.post(
           username: user.username,
           preferredChains: user.preferredChains,
           riskTolerance: user.riskTolerance,
+          notificationPrefs: user.notificationPrefs,
         },
       });
     } catch (error) {

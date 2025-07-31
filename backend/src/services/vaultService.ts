@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
-import { config, SUPPORTED_CHAINS } from '../config/index.js';
-import { logger } from '../config/logger.js';
-import VAULT_ABI from '../config/abi.json' with { type: 'json' };
+const { config, SUPPORTED_CHAINS } = require('../config/index.js');
+const { logger } = require('../config/logger.js');
+const VAULT_ABI = require('../config/abi.json');
 
 export interface VaultBalance {
   token: string;

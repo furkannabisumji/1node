@@ -16,6 +16,7 @@ interface Config {
   // 1inch API
   oneInchApiKey: string;
   oneInchBaseUrl: string;
+  oneInchServerUrl: string;
 
   // Blockchain RPC URLs
   alchemyApiKey: string;
@@ -76,6 +77,7 @@ function validateConfig(): Config {
     // 1inch API
     oneInchApiKey: process.env.ONEINCH_API_KEY!,
     oneInchBaseUrl: process.env.ONEINCH_BASE_URL || 'https://api.1inch.dev',
+    oneInchServerUrl: process.env.ONEINCH_SERVER_URL || 'http://localhost:3001',
 
     // Blockchain RPC URLs
     alchemyApiKey: process.env.ALCHEMY_API_KEY!,
