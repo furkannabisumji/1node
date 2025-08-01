@@ -170,6 +170,9 @@ export default function Onboarding() {
         walletAddress: address,
         email: step1Data.email,
         username: step1Data.username,
+        riskTolerance: step1Data.riskTolerance,
+        preferredChains: step2Data,
+        notificationPrefs: step3Data,
         signature: signature,
         message: message,
       });

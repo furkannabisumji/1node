@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Menu, User, PanelRight, Bell, ChevronDown } from 'lucide-react';
-import { useLocation, Link } from 'react-router';
+import { useLocation, Link, useNavigate } from 'react-router';
 import { AccountSettingsModal } from '../modals/AccountSettingsModal';
 import axiosInstance from '~/lib/axios';
 import axios from 'axios';
 import { useAuth } from '~/auth/AuthProvider';
 import formatAddress from '~/utils/formatAddress';
+import { useDisconnect } from 'wagmi';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -35,13 +36,29 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
   const pageTitle = getPageTitle(location.pathname);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [showWalletDropdown, setShowWalletDropdown] = useState(false)
+  const navigate = useNavigate()
+  const { disconnect } = useDisconnect()
   const { user, setUser } = useAuth()
+
+  useEffect(() => {
+    axiosInstance.get(`/auth/me`, {
+      validateStatus: () => true, // disables automatic throwing for non-2xx
+    }).then((res) => {
+      setUser(res.data.user)
+      if (res.status === 401) {
+        navigate('/onboarding')
+      }
+    }).catch((err) => {
+      navigate('/onboarding')
+    })
+  }, [])
 
   const handleLogout = async () => {
     try {
 
       await axiosInstance.post('/auth/logout')
-
+      disconnect()
+      navigate('/')
       setUser(null)
 
     } catch (err) {

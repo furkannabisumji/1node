@@ -144,7 +144,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               value={config.network || 'ethereum'}
-              onChange={(e) => setConfig(prev => ({ ...prev, network: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, network: e.target.value }))}
             >
               <option value="ethereum">Ethereum</option>
               <option value="polygon">Polygon</option>
@@ -158,7 +158,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               <select 
                 className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 value={config.condition || 'less_than'}
-                onChange={(e) => setConfig(prev => ({ ...prev, condition: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, condition: e.target.value }))}
               >
                 <option value="less_than">Less than</option>
                 <option value="greater_than">Greater than</option>
@@ -168,7 +168,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder="5"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                 value={config.gasLimit || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, gasLimit: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, gasLimit: e.target.value }))}
               />
               <span className="flex items-center px-3 text-neutral-400">USD</span>
             </div>
@@ -185,7 +185,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               value={config.scheduleType || 'recurring'}
-              onChange={(e) => setConfig(prev => ({ ...prev, scheduleType: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, scheduleType: e.target.value }))}
             >
               <option value="recurring">Recurring</option>
               <option value="once">One-time</option>
@@ -200,7 +200,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               type="time"
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               value={config.time || ''}
-              onChange={(e) => setConfig(prev => ({ ...prev, time: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, time: e.target.value }))}
             />
           </div>
 
@@ -209,7 +209,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               value={config.timezone || 'UTC'}
-              onChange={(e) => setConfig(prev => ({ ...prev, timezone: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, timezone: e.target.value }))}
             >
               <option value="UTC">UTC</option>
               <option value="EST">Eastern Time</option>
@@ -228,7 +228,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               value={config.token || 'ETH'}
-              onChange={(e) => setConfig(prev => ({ ...prev, token: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
             >
               <option value="ETH">Ethereum (ETH)</option>
               <option value="USDC">USD Coin (USDC)</option>
@@ -241,7 +241,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               value={config.chainId || 1}
-              onChange={(e) => setConfig(prev => ({ ...prev, chainId: parseInt(e.target.value) }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, chainId: parseInt(e.target.value) }))}
             >
               <option value={1}>Ethereum</option>
               <option value={137}>Polygon</option>
@@ -256,7 +256,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               <select 
                 className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 value={config.condition || 'greater_than'}
-                onChange={(e) => setConfig(prev => ({ ...prev, condition: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, condition: e.target.value }))}
               >
                 <option value="greater_than">Greater than</option>
                 <option value="less_than">Less than</option>
@@ -267,7 +267,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder="1.0"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                 value={config.amount || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, amount: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, amount: e.target.value }))}
               />
             </div>
           </div>
@@ -279,7 +279,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               placeholder="0x... or leave empty for connected wallet"
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500"
               value={config.walletAddress || ''}
-              onChange={(e) => setConfig(prev => ({ ...prev, walletAddress: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, walletAddress: e.target.value }))}
             />
           </div>
         </div>
@@ -302,12 +302,12 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder="0.1"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.minAmount || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, minAmount: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, minAmount: e.target.value }))}
               />
               <select 
                 className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.token || 'ETH'}
-                onChange={(e) => setConfig(prev => ({ ...prev, token: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
               >
                 <option value="ETH">ETH</option>
                 <option value="USDC">USDC</option>
@@ -323,12 +323,12 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder="10"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.maxAmount || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, maxAmount: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, maxAmount: e.target.value }))}
               />
               <select 
                 className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.token || 'ETH'}
-                onChange={(e) => setConfig(prev => ({ ...prev, token: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
               >
                 <option value="ETH">ETH</option>
                 <option value="USDC">USDC</option>
@@ -347,7 +347,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={config.restrictionType || 'hours'}
-              onChange={(e) => setConfig(prev => ({ ...prev, restrictionType: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, restrictionType: e.target.value }))}
             >
               <option value="hours">Specific Hours</option>
               <option value="days">Specific Days</option>
@@ -363,14 +363,14 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                   type="time"
                   className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={config.startTime || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, startTime: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, startTime: e.target.value }))}
                 />
                 <span className="text-neutral-400">to</span>
                 <input
                   type="time"
                   className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={config.endTime || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, endTime: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, endTime: e.target.value }))}
                 />
               </div>
             </div>
@@ -388,9 +388,9 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                       onChange={(e) => {
                         const days = config.days || [];
                         if (e.target.checked) {
-                          setConfig(prev => ({ ...prev, days: [...days, day] }));
+                          setConfig((prev: any) => ({ ...prev, days: [...days, day] }));
                         } else {
-                          setConfig(prev => ({ ...prev, days: days.filter(d => d !== day) }));
+                          setConfig((prev: any) => ({ ...prev, days: days.filter((d: any) => d !== day) }));
                         }
                       }}
                       className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
@@ -413,7 +413,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={config.token || 'ETH'}
-              onChange={(e) => setConfig(prev => ({ ...prev, token: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
             >
               <option value="ETH">Ethereum (ETH)</option>
               <option value="USDC">USD Coin (USDC)</option>
@@ -428,7 +428,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               <select 
                 className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.condition || 'greater_than'}
-                onChange={(e) => setConfig(prev => ({ ...prev, condition: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, condition: e.target.value }))}
               >
                 <option value="greater_than">Greater than</option>
                 <option value="less_than">Less than</option>
@@ -439,7 +439,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder="50"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.percentage || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, percentage: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, percentage: e.target.value }))}
               />
               <span className="flex items-center px-3 text-neutral-400">%</span>
             </div>
@@ -454,7 +454,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                   placeholder="80"
                   className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={config.maxPercentage || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, maxPercentage: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, maxPercentage: e.target.value }))}
                 />
                 <span className="flex items-center px-3 text-neutral-400">%</span>
               </div>
@@ -472,7 +472,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={config.pair || 'ETH/USDC'}
-              onChange={(e) => setConfig(prev => ({ ...prev, pair: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, pair: e.target.value }))}
             >
               <option value="ETH/USDC">ETH/USDC</option>
               <option value="BTC/USDC">BTC/USDC</option>
@@ -486,7 +486,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={config.timePeriod || '24h'}
-              onChange={(e) => setConfig(prev => ({ ...prev, timePeriod: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, timePeriod: e.target.value }))}
             >
               <option value="1h">Last 1 Hour</option>
               <option value="24h">Last 24 Hours</option>
@@ -500,7 +500,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               <select 
                 className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.condition || 'greater_than'}
-                onChange={(e) => setConfig(prev => ({ ...prev, condition: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, condition: e.target.value }))}
               >
                 <option value="greater_than">Greater than</option>
                 <option value="less_than">Less than</option>
@@ -510,7 +510,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder="1000000"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.volume || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, volume: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, volume: e.target.value }))}
               />
               <span className="flex items-center px-3 text-neutral-400">USD</span>
             </div>
@@ -527,7 +527,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={config.network || 'ethereum'}
-              onChange={(e) => setConfig(prev => ({ ...prev, network: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, network: e.target.value }))}
             >
               <option value="ethereum">Ethereum</option>
               <option value="polygon">Polygon</option>
@@ -544,12 +544,12 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder="20"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.gasPrice || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, gasPrice: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, gasPrice: e.target.value }))}
               />
               <select 
                 className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.unit || 'gwei'}
-                onChange={(e) => setConfig(prev => ({ ...prev, unit: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, unit: e.target.value }))}
               >
                 <option value="gwei">Gwei</option>
                 <option value="usd">USD</option>
@@ -562,7 +562,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={config.priority || 'standard'}
-              onChange={(e) => setConfig(prev => ({ ...prev, priority: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, priority: e.target.value }))}
             >
               <option value="slow">Slow (Cheaper)</option>
               <option value="standard">Standard</option>
@@ -583,7 +583,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 <input
                   type="checkbox"
                   checked={config.slippageProtection || false}
-                  onChange={(e) => setConfig(prev => ({ ...prev, slippageProtection: e.target.checked }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, slippageProtection: e.target.checked }))}
                   className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
                 />
                 <span className="text-white text-sm">Slippage Protection</span>
@@ -593,7 +593,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 <input
                   type="checkbox"
                   checked={config.mevProtection || false}
-                  onChange={(e) => setConfig(prev => ({ ...prev, mevProtection: e.target.checked }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, mevProtection: e.target.checked }))}
                   className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
                 />
                 <span className="text-white text-sm">MEV Protection</span>
@@ -603,7 +603,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 <input
                   type="checkbox"
                   checked={config.requireConfirmation || false}
-                  onChange={(e) => setConfig(prev => ({ ...prev, requireConfirmation: e.target.checked }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, requireConfirmation: e.target.checked }))}
                   className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
                 />
                 <span className="text-white text-sm">Require Manual Confirmation</span>
@@ -621,7 +621,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                   step="0.1"
                   className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={config.maxSlippage || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, maxSlippage: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, maxSlippage: e.target.value }))}
                 />
                 <span className="flex items-center px-3 text-neutral-400">%</span>
               </div>
@@ -636,7 +636,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder="20"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.deadline || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, deadline: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, deadline: e.target.value }))}
               />
               <span className="flex items-center px-3 text-neutral-400">minutes</span>
             </div>
@@ -653,7 +653,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={config.limitType || 'percentage'}
-              onChange={(e) => setConfig(prev => ({ ...prev, limitType: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, limitType: e.target.value }))}
             >
               <option value="percentage">Percentage Loss</option>
               <option value="absolute">Absolute Amount</option>
@@ -673,7 +673,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder={config.limitType === 'percentage' ? '10' : config.limitType === 'absolute' ? '1000' : '20'}
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={config.lossAmount || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, lossAmount: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, lossAmount: e.target.value }))}
               />
               <span className="flex items-center px-3 text-neutral-400">
                 {config.limitType === 'percentage' || config.limitType === 'portfolio' ? '%' : 'USD'}
@@ -686,7 +686,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={config.timePeriod || 'daily'}
-              onChange={(e) => setConfig(prev => ({ ...prev, timePeriod: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, timePeriod: e.target.value }))}
             >
               <option value="trade">Per Trade</option>
               <option value="daily">Daily</option>
@@ -700,7 +700,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               type="checkbox"
               id="pauseAutomation"
               checked={config.pauseOnLimit || false}
-              onChange={(e) => setConfig(prev => ({ ...prev, pauseOnLimit: e.target.checked }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, pauseOnLimit: e.target.checked }))}
               className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
             />
             <label htmlFor="pauseAutomation" className="text-sm text-white">Pause automation when limit reached</label>
@@ -723,7 +723,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               value={config.fromToken || ''}
               onChange={e => {
                 const selected = TOKEN_ADDRESS_OPTIONS.find(opt => opt.value === e.target.value);
-                setConfig(prev => ({
+                setConfig((prev: any) => ({
                   ...prev,
                   fromToken: e.target.value,
                   fromChain: selected ? selected.chain : prev.fromChain,
@@ -744,7 +744,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               value={config.toToken || ''}
               onChange={e => {
                 const selected = TOKEN_ADDRESS_OPTIONS.find(opt => opt.value === e.target.value);
-                setConfig(prev => ({
+                setConfig((prev: any) => ({
                   ...prev,
                   toToken: e.target.value,
                   toChain: selected ? selected.chain : prev.toChain,
@@ -765,7 +765,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               placeholder="10"
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.amount || ''}
-              onChange={e => setConfig(prev => ({ ...prev, amount: e.target.value }))}
+              onChange={e => setConfig((prev: any) => ({ ...prev, amount: e.target.value }))}
             />
           </div>
 
@@ -774,7 +774,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.fromChain || ''}
-              onChange={e => setConfig(prev => ({ ...prev, fromChain: Number(e.target.value) }))}
+              onChange={e => setConfig((prev: any) => ({ ...prev, fromChain: Number(e.target.value) }))}
             >
               <option value="">Select Chain</option>
               {CHAIN_OPTIONS.map(opt => (
@@ -788,7 +788,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.toChain || ''}
-              onChange={e => setConfig(prev => ({ ...prev, toChain: Number(e.target.value) }))}
+              onChange={e => setConfig((prev: any) => ({ ...prev, toChain: Number(e.target.value) }))}
             >
               <option value="">Select Chain</option>
               {CHAIN_OPTIONS.map(opt => (
@@ -804,7 +804,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               placeholder="0x... (leave empty for your wallet)"
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.receiver || ''}
-              onChange={e => setConfig(prev => ({ ...prev, receiver: e.target.value }))}
+              onChange={e => setConfig((prev: any) => ({ ...prev, receiver: e.target.value }))}
             />
           </div>
 
@@ -815,7 +815,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               placeholder="3600"
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.deadline || ''}
-              onChange={e => setConfig(prev => ({ ...prev, deadline: e.target.value }))}
+              onChange={e => setConfig((prev: any) => ({ ...prev, deadline: e.target.value }))}
             />
           </div>
         </div>
@@ -831,7 +831,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.token || 'ETH'}
-              onChange={(e) => setConfig(prev => ({ ...prev, token: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
             >
               <option value="ETH">Ethereum (ETH)</option>
               <option value="USDC">USD Coin (USDC)</option>
@@ -847,7 +847,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               placeholder="0x..."
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.recipient || ''}
-              onChange={(e) => setConfig(prev => ({ ...prev, recipient: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, recipient: e.target.value }))}
             />
           </div>
 
@@ -856,7 +856,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.amountType || 'percentage'}
-              onChange={(e) => setConfig(prev => ({ ...prev, amountType: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, amountType: e.target.value }))}
             >
               <option value="percentage">Percentage of Balance</option>
               <option value="fixed">Fixed Amount</option>
@@ -874,7 +874,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 step={config.amountType === 'percentage' ? '1' : '0.01'}
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 value={config.amount || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, amount: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, amount: e.target.value }))}
               />
               <span className="flex items-center px-3 text-neutral-400">
                 {config.amountType === 'percentage' ? '%' : config.token || 'ETH'}
@@ -887,7 +887,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.network || 'ethereum'}
-              onChange={(e) => setConfig(prev => ({ ...prev, network: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, network: e.target.value }))}
             >
               <option value="ethereum">Ethereum</option>
               <option value="polygon">Polygon</option>
@@ -908,7 +908,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.action || 'stake'}
-              onChange={(e) => setConfig(prev => ({ ...prev, action: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, action: e.target.value }))}
             >
               <option value="stake">Stake</option>
               <option value="unstake">Unstake</option>
@@ -920,7 +920,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.protocol || 'lido'}
-              onChange={(e) => setConfig(prev => ({ ...prev, protocol: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, protocol: e.target.value }))}
             >
               <option value="lido">Lido (stETH)</option>
               <option value="rocketpool">Rocket Pool (rETH)</option>
@@ -935,7 +935,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.token || 'ETH'}
-              onChange={(e) => setConfig(prev => ({ ...prev, token: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
             >
               <option value="ETH">Ethereum (ETH)</option>
               <option value="USDC">USD Coin (USDC)</option>
@@ -949,7 +949,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.amountType || 'percentage'}
-              onChange={(e) => setConfig(prev => ({ ...prev, amountType: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, amountType: e.target.value }))}
             >
               <option value="percentage">Percentage of Balance</option>
               <option value="fixed">Fixed Amount</option>
@@ -969,7 +969,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                   step={config.amountType === 'percentage' ? '1' : '0.01'}
                   className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   value={config.amount || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, amount: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, amount: e.target.value }))}
                 />
                 <span className="flex items-center px-3 text-neutral-400">
                   {config.amountType === 'percentage' ? '%' : config.token || 'ETH'}
@@ -1027,7 +1027,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.dex || 'uniswap'}
-              onChange={(e) => setConfig(prev => ({ ...prev, dex: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, dex: e.target.value }))}
             >
               <option value="uniswap">Uniswap V3</option>
               <option value="sushiswap">SushiSwap</option>
@@ -1041,7 +1041,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.tokenA || 'ETH'}
-              onChange={(e) => setConfig(prev => ({ ...prev, tokenA: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, tokenA: e.target.value }))}
             >
               <option value="ETH">Ethereum (ETH)</option>
               <option value="USDC">USD Coin (USDC)</option>
@@ -1055,7 +1055,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.tokenB || 'USDC'}
-              onChange={(e) => setConfig(prev => ({ ...prev, tokenB: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, tokenB: e.target.value }))}
             >
               <option value="USDC">USD Coin (USDC)</option>
               <option value="ETH">Ethereum (ETH)</option>
@@ -1069,7 +1069,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.feeTier || '0.3'}
-              onChange={(e) => setConfig(prev => ({ ...prev, feeTier: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, feeTier: e.target.value }))}
             >
               <option value="0.01">0.01% (Stable pairs)</option>
               <option value="0.05">0.05% (Low volatility)</option>
@@ -1083,7 +1083,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.amountType || 'percentage'}
-              onChange={(e) => setConfig(prev => ({ ...prev, amountType: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, amountType: e.target.value }))}
             >
               <option value="percentage">Percentage of Balance</option>
               <option value="fixed">Fixed USD Amount</option>
@@ -1101,7 +1101,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 step={config.amountType === 'percentage' ? '1' : '10'}
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 value={config.amount || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, amount: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, amount: e.target.value }))}
               />
               <span className="flex items-center px-3 text-neutral-400">
                 {config.amountType === 'percentage' ? '%' : 'USD'}
@@ -1114,7 +1114,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               type="checkbox"
               id="autoCompound"
               checked={config.autoCompound || false}
-              onChange={(e) => setConfig(prev => ({ ...prev, autoCompound: e.target.checked }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, autoCompound: e.target.checked }))}
               className="w-4 h-4 text-purple-600 bg-neutral-800 border-neutral-600 rounded focus:ring-purple-500 focus:ring-2"
             />
             <label htmlFor="autoCompound" className="text-sm text-white">Auto-compound rewards</label>
@@ -1131,7 +1131,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.protocol || 'compound'}
-              onChange={(e) => setConfig(prev => ({ ...prev, protocol: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, protocol: e.target.value }))}
             >
               <option value="compound">Compound</option>
               <option value="aave">Aave</option>
@@ -1147,7 +1147,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.rewardType || 'all'}
-              onChange={(e) => setConfig(prev => ({ ...prev, rewardType: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, rewardType: e.target.value }))}
             >
               <option value="all">All Available Rewards</option>
               <option value="staking">Staking Rewards</option>
@@ -1166,12 +1166,12 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 step="0.001"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 value={config.minClaimAmount || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, minClaimAmount: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, minClaimAmount: e.target.value }))}
               />
               <select 
                 className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 value={config.minClaimUnit || 'ETH'}
-                onChange={(e) => setConfig(prev => ({ ...prev, minClaimUnit: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, minClaimUnit: e.target.value }))}
               >
                 <option value="ETH">ETH</option>
                 <option value="USD">USD</option>
@@ -1188,7 +1188,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                   name="reinvest"
                   value="hold"
                   checked={config.reinvestOption === 'hold'}
-                  onChange={(e) => setConfig(prev => ({ ...prev, reinvestOption: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, reinvestOption: e.target.value }))}
                   className="w-4 h-4 text-purple-600 bg-neutral-800 border-neutral-600 focus:ring-purple-500"
                 />
                 <span className="text-white text-sm">Hold rewards in wallet</span>
@@ -1200,7 +1200,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                   name="reinvest"
                   value="restake"
                   checked={config.reinvestOption === 'restake'}
-                  onChange={(e) => setConfig(prev => ({ ...prev, reinvestOption: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, reinvestOption: e.target.value }))}
                   className="w-4 h-4 text-purple-600 bg-neutral-800 border-neutral-600 focus:ring-purple-500"
                 />
                 <span className="text-white text-sm">Restake automatically</span>
@@ -1212,7 +1212,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                   name="reinvest"
                   value="swap"
                   checked={config.reinvestOption === 'swap'}
-                  onChange={(e) => setConfig(prev => ({ ...prev, reinvestOption: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, reinvestOption: e.target.value }))}
                   className="w-4 h-4 text-purple-600 bg-neutral-800 border-neutral-600 focus:ring-purple-500"
                 />
                 <span className="text-white text-sm">Swap to preferred token</span>
@@ -1226,7 +1226,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               <select 
                 className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 value={config.swapTo || 'USDC'}
-                onChange={(e) => setConfig(prev => ({ ...prev, swapTo: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, swapTo: e.target.value }))}
               >
                 <option value="USDC">USD Coin (USDC)</option>
                 <option value="ETH">Ethereum (ETH)</option>
@@ -1247,7 +1247,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.strategy || 'percentage'}
-              onChange={(e) => setConfig(prev => ({ ...prev, strategy: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, strategy: e.target.value }))}
             >
               <option value="percentage">Target Percentages</option>
               <option value="equal">Equal Weight</option>
@@ -1265,7 +1265,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                     value={config.ethPercentage !== undefined ? 'ETH' : ''}
                     onChange={(e) => {
                       if (e.target.value === 'ETH') {
-                        setConfig(prev => ({ ...prev, ethPercentage: 40 }));
+                        setConfig((prev: any) => ({ ...prev, ethPercentage: 40 }));
                       }
                     }}
                   >
@@ -1278,7 +1278,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                     max="100"
                     className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     value={config.ethPercentage || ''}
-                    onChange={(e) => setConfig(prev => ({ ...prev, ethPercentage: e.target.value }))}
+                    onChange={(e) => setConfig((prev: any) => ({ ...prev, ethPercentage: e.target.value }))}
                   />
                   <span className="flex items-center px-3 text-neutral-400">%</span>
                 </div>
@@ -1289,7 +1289,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                     value={config.usdcPercentage !== undefined ? 'USDC' : ''}
                     onChange={(e) => {
                       if (e.target.value === 'USDC') {
-                        setConfig(prev => ({ ...prev, usdcPercentage: 60 }));
+                        setConfig((prev: any) => ({ ...prev, usdcPercentage: 60 }));
                       }
                     }}
                   >
@@ -1302,7 +1302,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                     max="100"
                     className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     value={config.usdcPercentage || ''}
-                    onChange={(e) => setConfig(prev => ({ ...prev, usdcPercentage: e.target.value }))}
+                    onChange={(e) => setConfig((prev: any) => ({ ...prev, usdcPercentage: e.target.value }))}
                   />
                   <span className="flex items-center px-3 text-neutral-400">%</span>
                 </div>
@@ -1319,7 +1319,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 step="0.5"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 value={config.threshold || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, threshold: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, threshold: e.target.value }))}
               />
               <span className="flex items-center px-3 text-neutral-400">% deviation</span>
             </div>
@@ -1330,7 +1330,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.dex || 'uniswap'}
-              onChange={(e) => setConfig(prev => ({ ...prev, dex: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, dex: e.target.value }))}
             >
               <option value="uniswap">Uniswap V3</option>
               <option value="sushiswap">SushiSwap</option>
@@ -1344,7 +1344,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               type="checkbox"
               id="considerGas"
               checked={config.considerGas || false}
-              onChange={(e) => setConfig(prev => ({ ...prev, considerGas: e.target.checked }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, considerGas: e.target.checked }))}
               className="w-4 h-4 text-purple-600 bg-neutral-800 border-neutral-600 rounded focus:ring-purple-500 focus:ring-2"
             />
             <label htmlFor="considerGas" className="text-sm text-white">Consider gas costs in rebalancing</label>
@@ -1361,7 +1361,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.alertType || 'notification'}
-              onChange={(e) => setConfig(prev => ({ ...prev, alertType: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, alertType: e.target.value }))}
             >
               <option value="notification">Push Notification</option>
               <option value="email">Email</option>
@@ -1378,7 +1378,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               placeholder="Price Alert Triggered"
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.title || ''}
-              onChange={(e) => setConfig(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, title: e.target.value }))}
             />
           </div>
 
@@ -1389,7 +1389,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               rows={3}
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
               value={config.message || ''}
-              onChange={(e) => setConfig(prev => ({ ...prev, message: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, message: e.target.value }))}
             />
           </div>
 
@@ -1403,7 +1403,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder={config.alertType === 'email' ? 'user@example.com' : 'https://webhook.site/...'}
                 className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 value={config.destination || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, destination: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, destination: e.target.value }))}
               />
             </div>
           )}
@@ -1418,7 +1418,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder={config.alertType === 'telegram' ? '@username or chat_id' : 'https://discord.com/api/webhooks/...'}
                 className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 value={config.destination || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, destination: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, destination: e.target.value }))}
               />
             </div>
           )}
@@ -1428,7 +1428,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.priority || 'normal'}
-              onChange={(e) => setConfig(prev => ({ ...prev, priority: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, priority: e.target.value }))}
             >
               <option value="low">Low Priority</option>
               <option value="normal">Normal Priority</option>
@@ -1442,7 +1442,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               type="checkbox"
               id="includeData"
               checked={config.includeData || false}
-              onChange={(e) => setConfig(prev => ({ ...prev, includeData: e.target.checked }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, includeData: e.target.checked }))}
               className="w-4 h-4 text-purple-600 bg-neutral-800 border-neutral-600 rounded focus:ring-purple-500 focus:ring-2"
             />
             <label htmlFor="includeData" className="text-sm text-white">Include automation data in alert</label>
@@ -1459,7 +1459,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.strategyType || 'dca'}
-              onChange={(e) => setConfig(prev => ({ ...prev, strategyType: e.target.value }))}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, strategyType: e.target.value }))}
             >
               <option value="dca">Dollar Cost Averaging</option>
               <option value="grid">Grid Trading</option>
@@ -1477,7 +1477,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 <select 
                   className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   value={config.purchaseToken || 'ETH'}
-                  onChange={(e) => setConfig(prev => ({ ...prev, purchaseToken: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, purchaseToken: e.target.value }))}
                 >
                   <option value="ETH">Ethereum (ETH)</option>
                   <option value="BTC">Bitcoin (BTC)</option>
@@ -1493,7 +1493,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                     placeholder="100"
                     className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     value={config.dcaAmount || ''}
-                    onChange={(e) => setConfig(prev => ({ ...prev, dcaAmount: e.target.value }))}
+                    onChange={(e) => setConfig((prev: any) => ({ ...prev, dcaAmount: e.target.value }))}
                   />
                   <span className="flex items-center px-3 text-neutral-400">USD</span>
                 </div>
@@ -1504,7 +1504,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 <select 
                   className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   value={config.frequency || 'weekly'}
-                  onChange={(e) => setConfig(prev => ({ ...prev, frequency: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, frequency: e.target.value }))}
                 >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -1522,7 +1522,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 <select 
                   className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   value={config.tradingPair || 'ETH/USDC'}
-                  onChange={(e) => setConfig(prev => ({ ...prev, tradingPair: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, tradingPair: e.target.value }))}
                 >
                   <option value="ETH/USDC">ETH/USDC</option>
                   <option value="BTC/USDC">BTC/USDC</option>
@@ -1538,14 +1538,14 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                     placeholder="Lower price"
                     className="bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     value={config.lowerPrice || ''}
-                    onChange={(e) => setConfig(prev => ({ ...prev, lowerPrice: e.target.value }))}
+                    onChange={(e) => setConfig((prev: any) => ({ ...prev, lowerPrice: e.target.value }))}
                   />
                   <input
                     type="number"
                     placeholder="Upper price"
                     className="bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     value={config.upperPrice || ''}
-                    onChange={(e) => setConfig(prev => ({ ...prev, upperPrice: e.target.value }))}
+                    onChange={(e) => setConfig((prev: any) => ({ ...prev, upperPrice: e.target.value }))}
                   />
                 </div>
               </div>
@@ -1559,7 +1559,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                   max="100"
                   className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   value={config.gridLevels || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, gridLevels: e.target.value }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, gridLevels: e.target.value }))}
                 />
               </div>
             </>
@@ -1573,7 +1573,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 placeholder="1000"
                 className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 value={config.totalBudget || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, totalBudget: e.target.value }))}
+                onChange={(e) => setConfig((prev: any) => ({ ...prev, totalBudget: e.target.value }))}
               />
               <span className="flex items-center px-3 text-neutral-400">USD</span>
             </div>
@@ -1586,7 +1586,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 <input
                   type="checkbox"
                   checked={config.stopOnProfit || false}
-                  onChange={(e) => setConfig(prev => ({ ...prev, stopOnProfit: e.target.checked }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, stopOnProfit: e.target.checked }))}
                   className="w-4 h-4 text-purple-600 bg-neutral-800 border-neutral-600 rounded focus:ring-purple-500"
                 />
                 <span className="text-white text-sm">Stop on target profit</span>
@@ -1596,7 +1596,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
                 <input
                   type="checkbox"
                   checked={config.stopOnLoss || false}
-                  onChange={(e) => setConfig(prev => ({ ...prev, stopOnLoss: e.target.checked }))}
+                  onChange={(e) => setConfig((prev: any) => ({ ...prev, stopOnLoss: e.target.checked }))}
                   className="w-4 h-4 text-purple-600 bg-neutral-800 border-neutral-600 rounded focus:ring-purple-500"
                 />
                 <span className="text-white text-sm">Stop on maximum loss</span>
@@ -1615,9 +1615,6 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
     return `${typeIcon} Configure ${nodeLabel}`;
   };
 
-  const getAccentColor = () => {
-    return nodeType === 'trigger' ? 'green' : nodeType === 'condition' ? 'blue' : 'purple';
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
