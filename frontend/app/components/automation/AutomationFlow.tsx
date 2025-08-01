@@ -1,7 +1,6 @@
 import { useCallback, useState, useEffect } from 'react';
 import {
   ReactFlow,
-  Controls,
   Background,
   addEdge,
   useNodesState,
@@ -24,10 +23,7 @@ const nodeTypes = {
   condition: ConditionNode,
 };
 
-const createInitialNodes = (
-  handleConfigure: (nodeData: any, nodeType: 'trigger' | 'condition' | 'action') => void,
-  handleDelete: (nodeId: string) => void
-): Node[] => [];
+const createInitialNodes = (): Node[] => [];
 
 const initialEdges: Edge[] = [];
 
@@ -58,7 +54,7 @@ export function AutomationFlow() {
   }, []);
 
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(createInitialNodes(handleNodeConfigure, () => { }));
+  const [nodes, setNodes, onNodesChange] = useNodesState(createInitialNodes());
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   useEffect(() => {
@@ -149,7 +145,10 @@ export function AutomationFlow() {
           description: `Configure ${nodeData.data.label}`,
           status: 'unconfigured',
           nodeType: nodeData.type as 'trigger' | 'condition' | 'action',
-          type: nodeData.data.label === "Price Change" ? 'PRICE_THRESHOLD' : nodeData.data.label === 'Swap Tokens' && 'FUSION_ORDER',
+          type: nodeData.data.label === "Price Change" ? 'PRICE_THRESHOLD' : 
+                nodeData.data.label === 'Wallet Balance' ? 'WALLET_BALANCE' :
+                nodeData.data.label === 'Swap Tokens' ? 'FUSION_ORDER' : 
+                nodeData.data.label,
           onConfigure: (data: any) => handleNodeConfigure(data, data.nodeType),
           onDelete: handleNodeDelete
         },
@@ -180,7 +179,7 @@ export function AutomationFlow() {
         onConnect={onConnect}
         onDrop={onDrop}
         onDragOver={onDragOver}
-        nodeTypes={nodeTypes}
+        nodeTypes={nodeTypes as any}
         fitView
         nodesConnectable={true}
         nodesDraggable={true}
