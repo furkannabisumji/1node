@@ -64,13 +64,14 @@ const aiInsights = [
 export default function Dashboard() {
   const [user, setUser] = useState()
   const navigate = useNavigate()
+  
   useEffect(() => {
     axiosInstance.get(`/auth/me`, {
       validateStatus: () => true, // disables automatic throwing for non-2xx
     }).then((res) => {
       console.log(res)
       setUser(res.data.user)
-      if(res.status === 401) {
+      if (res.status === 401) {
         navigate('/onboarding')
       }
     }).catch((err) => {
