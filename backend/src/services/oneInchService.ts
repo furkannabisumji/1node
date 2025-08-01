@@ -702,12 +702,8 @@ class OneInchService {
       logger.debug('Getting supported chains');
 
       const chains = [
-        { id: 1, name: 'Ethereum' },
-        { id: 137, name: 'Polygon' },
-        { id: 56, name: 'BNB Chain' },
-        { id: 42161, name: 'Arbitrum' },
         { id: 10, name: 'Optimism' },
-        { id: 43114, name: 'Avalanche' }
+        { id: 42793, name: 'Etherlink' }
       ];
 
       logger.debug('Successfully got supported chains', { chainCount: chains.length });

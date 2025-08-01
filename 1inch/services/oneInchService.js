@@ -75,16 +75,8 @@ class OneInchService {
 
     // Network mapping for easier access
     this.networks = {
-      1: NetworkEnum.ETHEREUM,
-      56: NetworkEnum.BINANCE,
-      137: NetworkEnum.POLYGON,
       10: NetworkEnum.OPTIMISM,
-      42161: NetworkEnum.ARBITRUM,
-      43114: NetworkEnum.AVALANCHE,
-      250: NetworkEnum.FANTOM,
-      100: NetworkEnum.GNOSIS,
-      8217: NetworkEnum.KLAYTN,
-      1313161554: NetworkEnum.AURORA
+      42793: 42793,
     };
   }
 
