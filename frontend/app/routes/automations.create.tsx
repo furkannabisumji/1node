@@ -12,6 +12,7 @@ import { DepositModal } from '~/components/automation/DepositModal';
 import { useAutomationStore } from '~/stores/useAutomationStore';
 import axiosInstance from '~/lib/axios';
 import { Bounce, toast, ToastContainer } from 'react-toastify';
+import { useAuth } from '~/auth/AuthProvider';
 
 export default function CreateAutomation() {
   const { address } = useAccount();
@@ -170,7 +171,30 @@ export default function CreateAutomation() {
     console.log(payload)
     try {
       const res = await axiosInstance.post('/automations', payload);
-      console.log(res)
+
+      const automationId = res.data.automation.id;
+
+
+      // Manually execute the automation
+
+      // const executeRes = await axiosInstance.post(`/automations/${automationId}/execute`)
+      
+      // console.log("Execute Response", executeRes)
+
+      // if (executeRes.status === 200) {
+      //   toast.success('Automation executed successfully!', {
+      //     position: "bottom-center",
+      //     autoClose: 5000,
+      //     hideProgressBar: false,
+      //     closeOnClick: false,
+      //     pauseOnHover: true,
+      //     draggable: true,
+      //     progress: undefined,
+      //     theme: "dark",
+      //     transition: Bounce,
+      //   });
+      // }
+
       if (res.status === 201) {
         setAutomationStatus('deployed');
         toast.success('Automation deployed successfully!', {

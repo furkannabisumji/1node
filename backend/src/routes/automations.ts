@@ -287,7 +287,7 @@ router.put(
  * POST /api/automations/:id/execute
  * Manually execute an automation (for testing)
  */
-router.post(
+router.put(
   '/:id/execute',
   [param('id').isString()],
   validateRequest,
