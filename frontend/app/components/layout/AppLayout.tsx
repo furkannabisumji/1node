@@ -35,14 +35,14 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Link
-          to="/automations/create"
-          className="w-12 h-12 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-lg transition-colors"
-        >
-          <Sparkles className="w-6 h-6 text-white" />
-        </Link>
-      </div>
+      {/*<div className="fixed bottom-6 right-6 z-50">*/}
+      {/*  <Link*/}
+      {/*    to="/automations/create"*/}
+      {/*    className="w-12 h-12 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-lg transition-colors"*/}
+      {/*  >*/}
+      {/*    <Sparkles className="w-6 h-6 text-white" />*/}
+      {/*  </Link>*/}
+      {/*</div>*/}
 
     </div>
   );

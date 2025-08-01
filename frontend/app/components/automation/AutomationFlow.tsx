@@ -1,10 +1,12 @@
 import { useCallback, useState, useEffect } from 'react';
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   addEdge,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   type Connection,
   type Edge,
   type Node,
@@ -27,7 +29,8 @@ const createInitialNodes = (): Node[] => [];
 
 const initialEdges: Edge[] = [];
 
-export function AutomationFlow() {
+function AutomationFlowInner() {
+  const { screenToFlowPosition } = useReactFlow();
   const [configModal, setConfigModal] = useState<{
     isOpen: boolean;
     nodeType: 'trigger' | 'condition' | 'action';
@@ -122,17 +125,16 @@ export function AutomationFlow() {
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      const reactFlowBounds = event.currentTarget.getBoundingClientRect();
       const type = event.dataTransfer.getData('application/reactflow');
 
       if (typeof type === 'undefined' || !type) {
         return;
       }
 
-      const position = {
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      };
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
 
       const nodeData = JSON.parse(type);
       const newNode: Node = {
@@ -156,7 +158,7 @@ export function AutomationFlow() {
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [nodes, setNodes, handleNodeConfigure, handleNodeDelete]
+    [nodes, setNodes, handleNodeConfigure, handleNodeDelete, screenToFlowPosition]
   );
 
   return (
@@ -204,5 +206,13 @@ export function AutomationFlow() {
         onSave={handleConfigSave}
       />
     </div>
+  );
+}
+
+export function AutomationFlow() {
+  return (
+    <ReactFlowProvider>
+      <AutomationFlowInner />
+    </ReactFlowProvider>
   );
 }
