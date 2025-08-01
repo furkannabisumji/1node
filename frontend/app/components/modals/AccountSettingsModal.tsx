@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, User, Mail, ChevronDown } from 'lucide-react';
+import { useAuth } from '~/auth/AuthProvider';
+import axiosInstance from '~/lib/axios';
+import { toast } from 'react-toastify';
 
 interface AccountSettingsModalProps {
   isOpen: boolean;
@@ -8,17 +11,72 @@ interface AccountSettingsModalProps {
 
 export function AccountSettingsModal({ isOpen, onClose }: AccountSettingsModalProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'notifications'>('profile');
+  const { user, setUser } = useAuth()
+  const [isSaving, setIsSaving] = useState(false)
+  const [userData, setUserData] = useState({
+    username: user?.username,
+    email: user?.email,
+    timezone: user?.timezone,
+    notificationPrefs: user?.notificationPrefs,
+  })
 
+  useEffect(() => {
+    setUserData({
+      username: user?.username,
+      email: user?.email,
+      timezone: user?.timezone,
+      notificationPrefs: user?.notificationPrefs,
+    })
+  }, [user])
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setUserData({ ...userData, [e.target.name]: e.target.value })
+    console.log("UserData", userData)
+  }
+  async function handleSave() {
+    try {
+      setIsSaving(true)
+      const {data} = await axiosInstance.put('/auth/profile', {
+        username: userData.username,
+        email: userData.email,
+        notificationPrefs: userData.notificationPrefs,
+      })
+      toast.success("User data saved successfully", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+      setUser(data.user)
+      onClose()
+    } catch (error) {
+      console.error("Error saving user data", error)
+      toast.error("Error saving user data", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+    } finally {
+      setIsSaving(false)
+    }
+
+  }
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="relative bg-neutral-900 border border-neutral-800 rounded-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
@@ -39,21 +97,19 @@ export function AccountSettingsModal({ isOpen, onClose }: AccountSettingsModalPr
         <div className="flex border-b border-neutral-800">
           <button
             onClick={() => setActiveTab('profile')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors cursor-pointer ${
-              activeTab === 'profile'
-                ? 'text-white bg-neutral-800'
-                : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
-            }`}
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors cursor-pointer ${activeTab === 'profile'
+              ? 'text-white bg-neutral-800'
+              : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
+              }`}
           >
             Profile
           </button>
           <button
             onClick={() => setActiveTab('notifications')}
-            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors cursor-pointer ${
-              activeTab === 'notifications'
-                ? 'text-white bg-neutral-800'
-                : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
-            }`}
+            className={`flex-1 px-6 py-3 text-sm font-medium transition-colors cursor-pointer ${activeTab === 'notifications'
+              ? 'text-white bg-neutral-800'
+              : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
+              }`}
           >
             Notifications
           </button>
@@ -62,16 +118,16 @@ export function AccountSettingsModal({ isOpen, onClose }: AccountSettingsModalPr
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           {activeTab === 'profile' ? (
-            <ProfileTab />
+            <ProfileTab userData={userData} handleChange={handleChange} handleSave={handleSave} />
           ) : (
-            <NotificationsTab />
+            <NotificationsTab userData={userData} handleChange={handleChange} handleSave={handleSave} setUserData={setUserData}/>
           )}
         </div>
 
         {/* Footer */}
         <div className="flex justify-end p-6 border-t border-neutral-800">
-          <button className="bg-white text-black font-medium py-2 px-6 rounded-lg hover:bg-neutral-100 transition-colors">
-            Save changes
+          <button onClick={handleSave} disabled={isSaving} className="bg-white text-black font-medium py-2 px-6 rounded-lg hover:bg-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {isSaving ? "Saving..." : "Save changes"}
           </button>
         </div>
       </div>
@@ -79,7 +135,8 @@ export function AccountSettingsModal({ isOpen, onClose }: AccountSettingsModalPr
   );
 }
 
-function ProfileTab() {
+function ProfileTab({ userData, handleChange, handleSave }: { userData: any, handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void, handleSave: () => Promise<void> }) {
+  console.log("UserData", userData)
   return (
     <div className="space-y-6">
       {/* Profile Information Header */}
@@ -98,6 +155,9 @@ function ProfileTab() {
           <input
             type="text"
             placeholder="Enter username"
+            value={userData.username}
+            onChange={handleChange}
+            name="username"
             className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
           />
         </div>
@@ -109,33 +169,22 @@ function ProfileTab() {
           </label>
           <input
             type="email"
+            value={userData.email}
+            onChange={handleChange}
+            name="email"
             placeholder="Enter email"
             className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
           />
         </div>
       </div>
 
-      {/* Timezone */}
-      <div>
-        <label className="block text-sm font-medium text-white mb-2">
-          Timezone
-        </label>
-        <div className="relative">
-          <select className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors appearance-none">
-            <option value="UTC">UTC</option>
-            <option value="EST">Eastern Time</option>
-            <option value="PST">Pacific Time</option>
-            <option value="GMT">Greenwich Mean Time</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
-        </div>
-      </div>
+
     </div>
   );
 }
 
-function NotificationsTab() {
-  const [emailEnabled, setEmailEnabled] = useState(true);
+function NotificationsTab({ userData, handleChange, handleSave, setUserData }: { userData: any, handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void, handleSave: () => Promise<void>, setUserData: (data: any) => void }) {
+  const [emailEnabled, setEmailEnabled] = useState(userData.notificationPrefs.emailNotifications);
 
   return (
     <div className="space-y-6">
@@ -159,15 +208,16 @@ function NotificationsTab() {
             <p className="text-neutral-400 text-sm">Receive detailed reports and summaries</p>
           </div>
           <button
-            onClick={() => setEmailEnabled(!emailEnabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              emailEnabled ? 'bg-green-600' : 'bg-neutral-600'
-            }`}
+            onClick={() => {
+              setUserData({ ...userData, notificationPrefs: { ...userData.notificationPrefs, emailNotifications: !userData.notificationPrefs.emailNotifications } })
+            }}
+
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${userData.notificationPrefs.emailNotifications ? 'bg-green-600' : 'bg-neutral-600'
+              }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                emailEnabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${userData.notificationPrefs.emailNotifications ? 'translate-x-6' : 'translate-x-1'
+                }`}
             />
           </button>
         </div>
@@ -180,7 +230,9 @@ function NotificationsTab() {
           <input
             type="email"
             placeholder="user@example.com"
-            defaultValue="user@example.com"
+            value={userData.notificationPrefs.notificationEmail}
+            onChange={handleChange}
+            name="notificationEmail"
             className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-4 py-3 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
           />
         </div>
