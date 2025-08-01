@@ -8,7 +8,7 @@ interface RightSidebarProps {
 }
 
 export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarProps) {
-  const [activeTab, setActiveTab] = useState<'simulation' | 'requirements' | 'insights'>('simulation');
+  const [activeTab, setActiveTab] = useState<'simulation' | 'requirements' | 'insights'>('requirements');
 
   return (
     <div className="w-96 bg-neutral-900 border-l border-neutral-800 flex flex-col h-full">
@@ -17,23 +17,23 @@ export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarPr
 
         {/* Secondary Actions */}
         <div className="flex items-center gap-2 px-4 py-3 w-full box-border overflow-x-auto">
-          <button onClick={() => setActiveTab('simulation')} className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
+          {/* <button onClick={() => setActiveTab('simulation')} className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
             <Eye className="w-4 h-4" />
             Simulation
-          </button>
+          </button> */}
           <button onClick={() => setActiveTab('requirements')} className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
             <AlertTriangle className="w-4 h-4" />
             Requirements
           </button>
-          <button onClick={() => setActiveTab('insights')} className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
+          {/* <button onClick={() => setActiveTab('insights')} className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
             <BotIcon className="w-4 h-4" />
             AI Insights
-          </button>
+          </button> */}
         </div>
 
-        {activeTab === 'simulation' && (
+        {/* {activeTab === 'simulation' && (
           <>
-            {/* Live Simulation Section */}
+            Live Simulation Section
             <div className="p-4">
               <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
                 <div className="flex items-center gap-2 mb-4">
@@ -67,7 +67,7 @@ export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarPr
               </div>
             </div>
 
-            {/* Live Simulation Steps */}
+            Live Simulation Steps
             <div className="px-4 pb-4">
               <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
                 <div className="flex items-center gap-2 mb-4">
@@ -76,7 +76,7 @@ export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarPr
                 </div>
 
                 <div className="space-y-3">
-                  {/* Step 1 */}
+                  Step 1
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <div>
@@ -85,7 +85,7 @@ export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarPr
                     </div>
                   </div>
 
-                  {/* Step 2 */}
+                  Step 2
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-neutral-600 rounded-full"></div>
                     <div>
@@ -94,7 +94,7 @@ export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarPr
                     </div>
                   </div>
 
-                  {/* Step 3 */}
+                  Step 3
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-neutral-600 rounded-full"></div>
                     <div>
@@ -106,7 +106,7 @@ export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarPr
               </div>
             </div>
           </>
-        )}
+        )} */}
 
         {activeTab === 'requirements' && (
           <>
