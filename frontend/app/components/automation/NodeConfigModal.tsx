@@ -237,6 +237,20 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-white mb-2">Network</label>
+            <select 
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+              value={config.chainId || 1}
+              onChange={(e) => setConfig(prev => ({ ...prev, chainId: parseInt(e.target.value) }))}
+            >
+              <option value={1}>Ethereum</option>
+              <option value={137}>Polygon</option>
+              <option value={42161}>Arbitrum</option>
+              <option value={10}>Optimism</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-white mb-2">Condition</label>
             <div className="flex gap-2">
               <select 

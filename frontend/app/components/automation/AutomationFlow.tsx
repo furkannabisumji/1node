@@ -149,7 +149,10 @@ export function AutomationFlow() {
           description: `Configure ${nodeData.data.label}`,
           status: 'unconfigured',
           nodeType: nodeData.type as 'trigger' | 'condition' | 'action',
-          type: nodeData.data.label === "Price Change" ? 'PRICE_THRESHOLD' : nodeData.data.label === 'Swap Tokens' && 'FUSION_ORDER',
+          type: nodeData.data.label === "Price Change" ? 'PRICE_THRESHOLD' : 
+                nodeData.data.label === 'Wallet Balance' ? 'WALLET_BALANCE' :
+                nodeData.data.label === 'Swap Tokens' ? 'FUSION_ORDER' : 
+                nodeData.data.label,
           onConfigure: (data: any) => handleNodeConfigure(data, data.nodeType),
           onDelete: handleNodeDelete
         },

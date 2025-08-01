@@ -1,12 +1,11 @@
-import {Save, Play, AlertTriangle, Brain, Eye, Cog, BotIcon} from 'lucide-react';
+import {Play, AlertTriangle, Brain, Eye, Cog, BotIcon} from 'lucide-react';
 
 interface TopActionBarProps {
   status: 'draft' | 'deployed' | 'active';
-  onSave: () => void;
   onDeploy: () => void;
 }
 
-export function TopActionBar({ status, onSave, onDeploy }: TopActionBarProps) {
+export function TopActionBar({ status, onDeploy }: TopActionBarProps) {
   return (
     <div className="bg-black border-b border-neutral-800 px-6 py-4">
       {/* Strategy Header */}
@@ -18,15 +17,6 @@ export function TopActionBar({ status, onSave, onDeploy }: TopActionBarProps) {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          {/* Save Button */}
-          <button 
-            onClick={onSave}
-            className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors border border-neutral-600"
-          >
-            <Save className="w-4 h-4" />
-            Save
-          </button>
-
           {/* Deploy/Withdraw/Deactivate */}
           {status === 'draft' && (
             <button 

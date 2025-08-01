@@ -4,9 +4,10 @@ import { Play, Circle, Clock, DollarSign, Zap, TrendingUp, AlertTriangle, BotIco
 interface RightSidebarProps {
   onWithdraw: () => void;
   onDeposit: () => void;
+  onDeploy: () => void;
 }
 
-export function RightSidebar({ onWithdraw, onDeposit }: RightSidebarProps) {
+export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarProps) {
   const [activeTab, setActiveTab] = useState<'simulation' | 'requirements' | 'insights'>('simulation');
 
   return (
@@ -197,7 +198,10 @@ export function RightSidebar({ onWithdraw, onDeposit }: RightSidebarProps) {
 
       {/* Fixed Deploy Button */}
       <div className="p-4 border-t border-neutral-800 bg-neutral-900">
-        <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition-colors font-medium flex items-center justify-center gap-2">
+        <button 
+          onClick={onDeploy}
+          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
+        >
           <Play className="w-4 h-4" />
           Deploy Automation
         </button>
