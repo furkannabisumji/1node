@@ -92,12 +92,11 @@ export default function CreateAutomation() {
       description: 'Created from visual builder',
       trigger: {
         type: trigger.data.type,
-        chainId: trigger?.data?.config?.chainId,
+        chainId: (trigger?.data?.config as any)?.chainId,
         config: trigger.data.config,
       },
       action: {
         type: action.data.type,
-        chainId: action.data.config?.chainId,
         config: action.data.config,
       },
       conditions: conditions.map((c) => ({
