@@ -28,7 +28,6 @@ export function Welcome() {
           message,
         });
         if (res.data) {
-          setUser(res.data.user);
           navigate('/dashboard');
         }
       } catch (err) {
