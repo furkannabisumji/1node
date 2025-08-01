@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Circle, Clock, DollarSign, Zap, TrendingUp, AlertTriangle, BotIcon, Eye } from 'lucide-react';
+import { Play, DollarSign, AlertTriangle } from 'lucide-react';
 
 interface RightSidebarProps {
   onWithdraw: () => void;
