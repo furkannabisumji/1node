@@ -1,4 +1,4 @@
-import { CheckCircle, Pause, Eye, Settings } from 'lucide-react';
+import { CheckCircle, Pause, Eye } from 'lucide-react';
 import { Link } from 'react-router';
 
 interface Automation {
@@ -151,9 +151,6 @@ export function AutomationCard({ automation }: AutomationCardProps) {
           >
             <Eye className="w-4 h-4 text-neutral-400 hover:text-white" />
           </Link>
-          <button className="p-2 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer">
-            <Settings className="w-4 h-4 text-neutral-400 hover:text-white" />
-          </button>
         </div>
       </div>
 

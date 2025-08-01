@@ -68,7 +68,7 @@ export function Welcome() {
                     <>
                       <button
                         className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors 
-                          hover:bg-neutral-700 text-white
+                          hover:bg-neutral-700 text-white cursor-pointer
                           `}
                         onClick={show}
                       // disabled={isConnected}

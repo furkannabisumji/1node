@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router';
 import { AppLayout } from '~/components/layout/AppLayout';
 import { CheckCircle, Pause, ArrowLeft, Play, Square, Trash2, Edit, Copy } from 'lucide-react';
 import axiosInstance from '~/lib/axios';
+import { toast } from 'react-toastify';
 
 interface Automation {
   id: string;
@@ -150,27 +151,80 @@ export default function AutomationDetail() {
     }
   };
 
+  const confirmDeleteAutomation = () => {
+    if (!automation || !id) return;
+
+    // Custom toast with action buttons
+    const DeleteConfirmation = ({ closeToast }: { closeToast: () => void }) => (
+      <div className="p-2">
+        <div className="mb-4">
+          <h4 className="font-medium text-white mb-1">Delete Automation</h4>
+          <p className="text-sm text-neutral-300">
+            Are you sure you want to delete "{automation.name}"? This action cannot be undone.
+          </p>
+        </div>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => {
+              closeToast();
+            }}
+            className="px-3 py-1 text-sm bg-neutral-700 hover:bg-neutral-600 text-white rounded transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              closeToast();
+              handleDeleteAutomation();
+            }}
+            className="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded transition-colors cursor-pointer"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    );
+
+    toast(<DeleteConfirmation closeToast={() => {}} />, {
+      position: "top-center",
+      autoClose: false,
+      closeOnClick: false,
+      draggable: false,
+      hideProgressBar: true,
+      className: "!bg-neutral-900 !border !border-neutral-700 !text-white",
+      style: {
+        backgroundColor: '#171717',
+        border: '1px solid #404040',
+        color: 'white',
+      },
+      closeButton: false,
+    });
+  };
+
   const handleDeleteAutomation = async () => {
     if (!automation || !id) return;
-    
-    // Add confirmation dialog
-    if (!window.confirm(`Are you sure you want to delete "${automation.name}"? This action cannot be undone.`)) {
-      return;
-    }
-
-
     
     setActionLoading('delete');
     try {
       console.log(`Deleting automation ${id}...`);
       const response = await axiosInstance.delete(`/automations/${id}`);
       console.log('Delete response:', response.data);
+      
+      toast.success('Automation deleted successfully', {
+        position: "bottom-center",
+        autoClose: 3000,
+      });
 
       // Redirect to automations list after successful deletion
-      window.location.href = '/automations';
+      setTimeout(() => {
+        window.location.href = '/automations';
+      }, 1000);
     } catch (err: any) {
       console.error('Error deleting automation:', err);
-      // You could add a toast notification here for better UX
+      toast.error(err?.response?.data?.error || 'Failed to delete automation', {
+        position: "bottom-center",
+        autoClose: 5000,
+      });
       setActionLoading(null);
     }
   };
@@ -286,7 +340,7 @@ export default function AutomationDetail() {
               </button>
               
               <button 
-                onClick={handleDeleteAutomation}
+                onClick={confirmDeleteAutomation}
                 disabled={actionLoading === 'delete'}
                 className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed"
               >
