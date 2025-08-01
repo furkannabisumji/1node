@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router';
 import { AppLayout } from '~/components/layout/AppLayout';
-import { CheckCircle, Pause, ArrowLeft, Play, Square, Trash2, Edit, Copy } from 'lucide-react';
+import { CheckCircle, Pause, ArrowLeft, Play, Square, Trash2, Edit, Copy, DollarSign, TrendingUp, Lock, Unlock } from 'lucide-react';
 import axiosInstance from '~/lib/axios';
 import { toast } from 'react-toastify';
 
@@ -37,12 +37,42 @@ interface Automation {
   };
 }
 
+interface WorkflowDeposit {
+  id: string;
+  workflowId: string;
+  chainId: number;
+  tokenAddress: string;
+  tokenSymbol: string;
+  amount: string;
+  isLocked: boolean;
+  createdAt: string;
+  currentPriceUSD: number;
+  currentValueUSD: number;
+}
+
+interface PortfolioData {
+  workflowId: string;
+  workflowName: string;
+  deposits: WorkflowDeposit[];
+  summary: {
+    totalValue: number;
+    lockedValue: number;
+    availableValue: number;
+    depositCount: number;
+  };
+}
+
 export default function AutomationDetail() {
   const { id } = useParams();
   const [automation, setAutomation] = useState<Automation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  
+  // Portfolio data state
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const [portfolioError, setPortfolioError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAutomation = async () => {
@@ -66,14 +96,61 @@ export default function AutomationDetail() {
     }
   }, [id]);
 
+  // Fetch portfolio data for this automation
+  useEffect(() => {
+    const fetchPortfolioData = async () => {
+      if (!id) return;
+      
+      setPortfolioLoading(true);
+      setPortfolioError(null);
+      
+      try {
+        console.log(`Fetching portfolio data for workflow ${id}...`);
+        const response = await axiosInstance.get(`/portfolio/workflow/${id}/deposits`);
+        console.log('Portfolio data response:', response.data);
+        setPortfolioData(response.data);
+      } catch (err: any) {
+        console.error('Error fetching portfolio data:', err);
+        // Don't set error for 404 - just means no deposits yet
+        if (err?.response?.status !== 404) {
+          setPortfolioError(err?.response?.data?.error || 'Failed to fetch portfolio data');
+        }
+      } finally {
+        setPortfolioLoading(false);
+      }
+    };
+
+    if (id && automation) {
+      fetchPortfolioData();
+    }
+  }, [id, automation]);
+
   const getNetworkName = (chainId: number) => {
     switch (chainId) {
       case 1: return 'Ethereum';
       case 10: return 'Optimism';
       case 42161: return 'Arbitrum';
       case 137: return 'Polygon';
+      case 42793: return 'Etherlink';
       default: return `Chain ${chainId}`;
     }
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const formatTokenAmount = (amount: string, decimals: number = 18) => {
+    const value = parseFloat(amount) / Math.pow(10, decimals);
+    return value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    });
   };
 
   const truncateAddress = (address: string) => {
@@ -438,6 +515,149 @@ export default function AutomationDetail() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Portfolio Data */}
+        <div className="mt-6 bg-neutral-900 border border-neutral-800 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <DollarSign className="w-5 h-5" />
+            Portfolio
+          </h2>
+          
+          {portfolioLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-neutral-600 border-t-white rounded-full animate-spin"></div>
+              <span className="ml-3 text-neutral-400">Loading portfolio data...</span>
+            </div>
+          ) : portfolioError ? (
+            <div className="text-red-400 py-4">
+              Error loading portfolio data: {portfolioError}
+            </div>
+          ) : !portfolioData || portfolioData.deposits.length === 0 ? (
+            <div className="text-neutral-400 py-8 text-center">
+              <DollarSign className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg mb-2">No deposits found</p>
+              <p className="text-sm">This automation doesn't have any recorded deposits yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Portfolio Summary */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-neutral-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-4 h-4 text-green-500" />
+                    <span className="text-sm text-neutral-400">Total Value</span>
+                  </div>
+                  <div className="text-xl font-semibold text-white">
+                    {formatCurrency(portfolioData.summary.totalValue)}
+                  </div>
+                </div>
+                
+                <div className="bg-neutral-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lock className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm text-neutral-400">Locked</span>
+                  </div>
+                  <div className="text-xl font-semibold text-white">
+                    {formatCurrency(portfolioData.summary.lockedValue)}
+                  </div>
+                </div>
+                
+                <div className="bg-neutral-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Unlock className="w-4 h-4 text-blue-500" />
+                    <span className="text-sm text-neutral-400">Available</span>
+                  </div>
+                  <div className="text-xl font-semibold text-white">
+                    {formatCurrency(portfolioData.summary.availableValue)}
+                  </div>
+                </div>
+                
+                <div className="bg-neutral-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-4 h-4 bg-purple-500 rounded-full" />
+                    <span className="text-sm text-neutral-400">Deposits</span>
+                  </div>
+                  <div className="text-xl font-semibold text-white">
+                    {portfolioData.summary.depositCount}
+                  </div>
+                </div>
+              </div>
+
+              {/* Deposits by Chain */}
+              <div>
+                <h3 className="text-lg font-medium text-white mb-4">Deposits by Chain</h3>
+                <div className="space-y-4">
+                  {Object.entries(
+                    portfolioData.deposits.reduce((acc, deposit) => {
+                      const chainName = getNetworkName(deposit.chainId);
+                      if (!acc[chainName]) {
+                        acc[chainName] = {
+                          chainId: deposit.chainId,
+                          deposits: [],
+                          totalValue: 0,
+                        };
+                      }
+                      acc[chainName].deposits.push(deposit);
+                      acc[chainName].totalValue += deposit.currentValueUSD;
+                      return acc;
+                    }, {} as Record<string, { chainId: number; deposits: WorkflowDeposit[]; totalValue: number }>)
+                  ).map(([chainName, chainData]) => (
+                    <div key={chainName} className="bg-neutral-800 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                          <span className="text-white font-medium">{chainName}</span>
+                        </div>
+                        <span className="text-green-400 font-medium">
+                          {formatCurrency(chainData.totalValue)}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {chainData.deposits.map((deposit) => (
+                          <div key={deposit.id} className="flex items-center justify-between py-2 px-3 bg-neutral-700 rounded">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-2 h-2 rounded-full ${
+                                deposit.isLocked ? 'bg-yellow-500' : 'bg-green-500'
+                              }`}></div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-white text-sm font-medium">
+                                    {formatTokenAmount(deposit.amount)} {deposit.tokenSymbol}
+                                  </span>
+                                  {deposit.isLocked && (
+                                    <Lock className="w-3 h-3 text-yellow-500" />
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => copyToClipboard(deposit.tokenAddress)}
+                                  className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                                  title={`Click to copy: ${deposit.tokenAddress}`}
+                                >
+                                  {truncateAddress(deposit.tokenAddress)}
+                                  <Copy className="w-2 h-2 opacity-50" />
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="text-right">
+                              <div className="text-white text-sm font-medium">
+                                {formatCurrency(deposit.currentValueUSD)}
+                              </div>
+                              <div className="text-xs text-neutral-400">
+                                {new Date(deposit.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Execution History */}

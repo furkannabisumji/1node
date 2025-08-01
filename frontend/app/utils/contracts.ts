@@ -1,7 +1,11 @@
+// Import ABIs from separate files
+export { USDC_ABI } from './abis/usdc';
+export { VAULT_ABI } from './abis/vault';
+
 // Contract addresses and configuration
 export const CONTRACTS = {
-  // 1Node Deposit Contracts
-  DEPOSIT_CONTRACT: {
+  // 1Node Vault Contracts
+  VAULT: {
     [10]: '0x4E19A6C2B37c799E6BC8eb682889f33C6d97760A', // Optimism
     [42793]: '0x4E19A6C2B37c799E6BC8eb682889f33C6d97760A', // Etherlink
   },
@@ -13,75 +17,6 @@ export const CONTRACTS = {
   }
 } as const;
 
-// USDC ABI (standard ERC20)
-export const USDC_ABI = [
-  {
-    inputs: [{ name: '_owner', type: 'address' }],
-    name: 'balanceOf',
-    outputs: [{ name: 'balance', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: '_owner', type: 'address' },
-      { name: '_spender', type: 'address' },
-    ],
-    name: 'allowance',
-    outputs: [{ name: 'remaining', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: '_spender', type: 'address' },
-      { name: '_value', type: 'uint256' },
-    ],
-    name: 'approve',
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: '_to', type: 'address' },
-      { name: '_value', type: 'uint256' },
-    ],
-    name: 'transfer',
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-] as const;
-
-// 1Node Deposit Contract ABI (simplified)
-export const DEPOSIT_CONTRACT_ABI = [
-  {
-    inputs: [
-      { name: 'amount', type: 'uint256' },
-    ],
-    name: 'deposit',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'user', type: 'address' }],
-    name: 'getBalance',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'amount', type: 'uint256' },
-    ],
-    name: 'withdraw',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-] as const;
 
 // Chain information
 export const SUPPORTED_CHAINS = {

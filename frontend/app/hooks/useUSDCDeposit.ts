@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAutomationStore } from '~/stores/useAutomationStore';
-import { CONTRACTS, USDC_ABI, DEPOSIT_CONTRACT_ABI, formatUSDC, parseUSDC } from '~/utils/contracts';
+import { CONTRACTS, USDC_ABI, VAULT_ABI, formatUSDC, parseUSDC } from '~/utils/contracts';
 import type { SupportedChain } from '~/stores/useAutomationStore';
 
 export function useUSDCDeposit() {
@@ -18,7 +18,7 @@ export function useUSDCDeposit() {
   
   // Contract addresses for selected chain
   const usdcAddress = CONTRACTS.USDC[chainId as keyof typeof CONTRACTS.USDC];
-  const depositAddress = CONTRACTS.DEPOSIT_CONTRACT[chainId as keyof typeof CONTRACTS.DEPOSIT_CONTRACT];
+  const vaultAddress = CONTRACTS.VAULT[chainId as keyof typeof CONTRACTS.VAULT];
 
   // Read USDC balance
   const { data: usdcBalance, refetch: refetchUSDCBalance } = useReadContract({
@@ -29,22 +29,22 @@ export function useUSDCDeposit() {
     query: { enabled: !!address },
   });
 
-  // Read USDC allowance for deposit contract
+  // Read USDC allowance for vault contract
   const { data: usdcAllowance, refetch: refetchAllowance } = useReadContract({
     address: usdcAddress as `0x${string}`,
     abi: USDC_ABI,
     functionName: 'allowance',
-    args: address ? [address, depositAddress as `0x${string}`] : undefined,
+    args: address ? [address, vaultAddress as `0x${string}`] : undefined,
     query: { enabled: !!address },
   });
 
-  // Read deposit balance from contract
-  const { data: depositBalance, refetch: refetchDepositBalance } = useReadContract({
-    address: depositAddress as `0x${string}`,
-    abi: DEPOSIT_CONTRACT_ABI,
+  // Read vault balance from contract (token-specific)
+  const { data: vaultBalance, refetch: refetchVaultBalance } = useReadContract({
+    address: vaultAddress as `0x${string}`,
+    abi: VAULT_ABI,
     functionName: 'getBalance',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
+    args: [usdcAddress as `0x${string}`], // Pass token address
+    query: { enabled: !!address && !!usdcAddress },
   });
 
   // Write contracts
@@ -61,13 +61,13 @@ export function useUSDCDeposit() {
     hash: depositHash,
   });
 
-  // Update store with deposit balance
+  // Update store with vault balance
   useEffect(() => {
-    if (depositBalance !== undefined) {
-      const balance = formatUSDC(depositBalance as bigint);
+    if (vaultBalance !== undefined) {
+      const balance = formatUSDC(vaultBalance as bigint);
       setUserDepositBalance(balance);
     }
-  }, [depositBalance, setUserDepositBalance]);
+  }, [vaultBalance, setUserDepositBalance]);
 
   // Update loading state
   useEffect(() => {
@@ -88,10 +88,10 @@ export function useUSDCDeposit() {
 
   useEffect(() => {
     if (isDepositSuccess) {
-      refetchDepositBalance();
+      refetchVaultBalance();
       refetchUSDCBalance();
     }
-  }, [isDepositSuccess, refetchDepositBalance, refetchUSDCBalance]);
+  }, [isDepositSuccess, refetchVaultBalance, refetchUSDCBalance]);
 
   // Approve USDC spending
   const approveUSDCSpending = useCallback(async (amount: number) => {
@@ -104,32 +104,32 @@ export function useUSDCDeposit() {
         address: usdcAddress as `0x${string}`,
         abi: USDC_ABI,
         functionName: 'approve',
-        args: [depositAddress as `0x${string}`, amountInWei],
+        args: [vaultAddress as `0x${string}`, amountInWei],
       });
     } catch (error) {
       console.error('Error approving USDC:', error);
       throw error;
     }
-  }, [address, usdcAddress, depositAddress, approveUSDC]);
+  }, [address, usdcAddress, vaultAddress, approveUSDC]);
 
-  // Deposit USDC
+  // Deposit USDC to vault
   const deposit = useCallback(async (amount: number) => {
-    if (!address || !depositAddress) return;
+    if (!address || !vaultAddress || !usdcAddress) return;
 
     const amountInWei = parseUSDC(amount);
     
     try {
       await depositUSDC({
-        address: depositAddress as `0x${string}`,
-        abi: DEPOSIT_CONTRACT_ABI,
+        address: vaultAddress as `0x${string}`,
+        abi: VAULT_ABI,
         functionName: 'deposit',
-        args: [amountInWei],
+        args: [usdcAddress as `0x${string}`, amountInWei], // token address + amount
       });
     } catch (error) {
-      console.error('Error depositing USDC:', error);
+      console.error('Error depositing USDC to vault:', error);
       throw error;
     }
-  }, [address, depositAddress, depositUSDC]);
+  }, [address, vaultAddress, usdcAddress, depositUSDC]);
 
   // Check if approval is needed
   const needsApproval = useCallback((amount: number) => {
@@ -141,7 +141,7 @@ export function useUSDCDeposit() {
   return {
     // Balances
     usdcBalance: usdcBalance ? formatUSDC(usdcBalance as bigint) : 0,
-    depositBalance: depositBalance ? formatUSDC(depositBalance as bigint) : 0,
+    vaultBalance: vaultBalance ? formatUSDC(vaultBalance as bigint) : 0,
     allowance: usdcAllowance ? formatUSDC(usdcAllowance as bigint) : 0,
     
     // Actions
@@ -158,7 +158,7 @@ export function useUSDCDeposit() {
     // Refetch functions
     refetchBalances: () => {
       refetchUSDCBalance();
-      refetchDepositBalance();
+      refetchVaultBalance();
       refetchAllowance();
     },
 
