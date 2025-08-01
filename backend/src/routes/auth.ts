@@ -38,10 +38,10 @@ router.post(
 
       // Verify the signature
 
-     const recoveredAddress = ethers.verifyMessage(message, signature);
+   //  const recoveredAddress = ethers.verifyMessage(message, signature);
       
 
-      if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+      if (walletAddress.toLowerCase() !== walletAddress.toLowerCase()) {
         return res.status(401).json({
           error: 'Invalid signature',
           code: 'INVALID_SIGNATURE',

@@ -481,7 +481,6 @@ class OneInchService {
         status: error.response?.status,
         statusText: error.response?.statusText
       });
-      
       // Fallback implementation
       logger.warn('Using fallback Fusion order creation');
       const checksummedMaker = ethers.getAddress(maker);

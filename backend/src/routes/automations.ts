@@ -75,6 +75,7 @@ router.post(
         data: {
           name,
           description,
+          isActive: true,
           userId,
           triggers: {
             create: {

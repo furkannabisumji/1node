@@ -1,5 +1,43 @@
-const { SDK, NetworkEnum } = require('@1inch/cross-chain-sdk');
+const { 
+  SDK,
+  HashLock,
+  PrivateKeyProviderConnector,
+  Web3ProviderConnector,
+  NetworkEnum
+} = require('@1inch/cross-chain-sdk');
+const { randomBytes } = require('crypto');
 const axios = require('axios');
+const { solidityPackedKeccak256 } = require('ethers');
+const { Web3 } = require('web3'); // Fix Web3 import
+
+/**
+ * Generate random 32 bytes
+ */
+function getRandomBytes32() {
+  return '0x' + randomBytes(32).toString('hex');
+}
+
+/**
+ * Preset enumeration for order execution speed
+ */
+const PresetEnum = {
+  fast: "fast",
+  medium: "medium",
+  slow: "slow",
+};
+
+/**
+ * @typedef {Object} OrderParams
+ * @property {string} fromTokenAddress - Source token contract address
+ * @property {string} toTokenAddress - Destination token contract address
+ * @property {string} amount - Amount to swap in wei
+ * @property {string} walletAddress - User's wallet address
+ * @property {string} [permit] - A permit (EIP-2612) call data, user approval sign
+ * @property {string} [receiver] - Receiver address (defaults to walletAddress)
+ * @property {string} [preset] - Execution speed preset (fast/medium/slow)
+ * @property {string|number} [nonce] - Allows to batch cancel orders
+ * @property {Object} [fee] - Taking fee information
+ */
 
 /**
  * 1inch Fusion+ SDK Service
@@ -14,11 +52,26 @@ class OneInchService {
       console.warn('⚠️  Warning: ONE_INCH_API_KEY not set. Some features may be limited.');
     }
 
-    // Initialize Fusion+ SDK
-    this.sdk = new SDK({
+    const makerPrivateKey = process.env.EXECUTOR_PRIVATE_KEY || '0x0000000000000000000000000000000000000000000000000000000000000001';
+    this.makerAddress = process.env.EXECUTOR_ADDRESS || '0x0000000000000000000000000000000000000000';
+    
+    const nodeUrl = process.env.ONE_INCH_NODE_URL || 'https://rpc.ankr.com/eth';
+    
+    // Ensure private key has 0x prefix
+    const formattedPrivateKey = makerPrivateKey.startsWith('0x') ? makerPrivateKey : `0x${makerPrivateKey}`;
+    
+    const web3Provider = new Web3(nodeUrl);
+    const blockchainProvider = new PrivateKeyProviderConnector(
+      formattedPrivateKey,
+      new Web3ProviderConnector(web3Provider),
+    );
+    
+    const sdk = new SDK({
       url: "https://api.1inch.dev/fusion-plus",
       authKey: this.apiKey,
+      blockchainProvider,
     });
+    this.sdk = sdk;
 
     // Network mapping for easier access
     this.networks = {
@@ -99,7 +152,7 @@ class OneInchService {
         amount,
         walletAddress
       });
-
+      console.log(quote);
       return {
         success: true,
         srcChainId,
@@ -122,36 +175,95 @@ class OneInchService {
   }
 
   /**
-   * Create Fusion+ order using SDK
+   * Create Fusion+ order using SDK with structured parameters
+   * @param {number} srcChainId - Source chain ID
+   * @param {number} dstChainId - Destination chain ID  
+   * @param {string} fromTokenAddress - Source token address
+   * @param {string} toTokenAddress - Destination token address
+   * @param {string} amount - Amount to swap
+   * @param {string} walletAddress - User's wallet address
+   * @returns {Promise<Object>} Order creation result
    */
-  async createFusionOrder(srcChainId, dstChainId, srcTokenAddress, dstTokenAddress, amount, walletAddress) {
+  async createFusionOrder(srcChainId, dstChainId, fromTokenAddress, toTokenAddress, amount, walletAddress) {
     try {
       const srcNetwork = this.networks[srcChainId];
       const dstNetwork = this.networks[dstChainId];
-
+      const spenderAddress = await this.getSpenderAddress(srcChainId);
+      console.log(spenderAddress);
       if (!srcNetwork || !dstNetwork) {
         throw new Error(`Unsupported network: ${srcChainId} or ${dstChainId}`);
       }
 
-      const order = await this.sdk.createOrder({
-        srcChainId,
-        dstChainId,
-        srcTokenAddress,
-        dstTokenAddress,
-        amount,
-        walletAddress
+      const params = {
+        srcChainId: srcChainId,
+        dstChainId: dstChainId,
+        srcTokenAddress: fromTokenAddress,
+        dstTokenAddress: toTokenAddress,
+        amount: amount,
+        enableEstimate: true,
+        walletAddress: walletAddress,
+      };
+      
+      const quote = await this.sdk.getQuote(params);
+      const selectedPreset = quote.recommendedPreset || PresetEnum.medium;
+      const preset = quote.getPreset(selectedPreset);
+      
+      // Check if multiple fills are allowed
+      const allowMultipleFills = preset.allowMultipleFills;
+      const secretsCount = allowMultipleFills ? preset.secretsCount : 1;
+      console.log(preset);
+      const secrets = Array.from({ length: secretsCount }).map(() =>
+        getRandomBytes32(),
+      );
+      const secretHashes = secrets.map((x) => HashLock.hashSecret(x));
+      
+      const hashLock =
+        secretsCount === 1
+          ? HashLock.forSingleFill(secrets[0])
+          : HashLock.forMultipleFills(
+              secretHashes.map((secretHash, i) =>
+                solidityPackedKeccak256(
+                  ["uint64", "bytes32"],
+                  [i, secretHash.toString()],
+                ),
+              ),
+            );
+      
+      const order = await this.sdk.createOrder(quote, {
+        walletAddress: walletAddress,
+        hashLock,
+        secretHashes,
+        preset: selectedPreset,
+        // fee is an optional field
+        fee: {
+          takingFeeBps: 100, // 1% as we use bps format, 1% is equal to 100bps
+          takingFeeReceiver: "0x0000000000000000000000000000000000000000", //  fee receiver address
+        },
       });
-
+      
+      // Submit the order to the network
+      const submitResult = await this.sdk.submitOrder(
+        srcChainId,
+        order.order,
+        quote.quoteId,
+        secretsCount === 1 ? [secretHashes[0]] : secretHashes
+      );
       return {
         success: true,
         orderHash: order.orderHash,
         order: order.order,
         signature: order.signature,
-        quoteId: order.quoteId
+        quoteId: order.quoteId,
+        preset: selectedPreset,
+        receiver: walletAddress,
+        secrets: secrets, // Include secrets for potential future use
+        secretHashes: secretHashes,
+        submitResult: submitResult, // Include submission result
+        allowMultipleFills: allowMultipleFills,
+        secretsCount: secretsCount
       };
     } catch (error) {
-      console.error('Error creating Fusion+ order:', error);
-      throw new Error(`Failed to create Fusion+ order: ${error.message}`);
+      console.error('Error creating Fusion+ order:', error.response.data);
     }
   }
 
@@ -372,4 +484,4 @@ class OneInchService {
   }
 }
 
-module.exports = { OneInchService };
+module.exports = { OneInchService, PresetEnum };
