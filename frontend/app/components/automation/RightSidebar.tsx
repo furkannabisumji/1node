@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Play, DollarSign, AlertTriangle } from 'lucide-react';
+import { useAutomationStore } from '~/stores/useAutomationStore';
+import { CostBreakdown } from './CostBreakdown';
+import { formatCost } from '~/utils/costCalculation';
 
 interface RightSidebarProps {
   onWithdraw: () => void;
@@ -9,6 +12,18 @@ interface RightSidebarProps {
 
 export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarProps) {
   const [activeTab, setActiveTab] = useState<'simulation' | 'requirements' | 'insights'>('requirements');
+  
+  const {
+    costBreakdown,
+    userDepositBalance,
+    depositStatus,
+    getIsDeployReady,
+    nodes
+  } = useAutomationStore();
+  
+  const isDeployReady = getIsDeployReady();
+  const hasNodes = nodes.length > 0;
+  const remaining = Math.max(0, costBreakdown.total - userDepositBalance);
 
   return (
     <div className="w-96 bg-neutral-900 border-l border-neutral-800 flex flex-col h-full">
@@ -110,86 +125,63 @@ export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarPr
 
         {activeTab === 'requirements' && (
           <>
-            {/* Required Balances */}
+            {/* Cost Breakdown */}
             <div className="px-4 pb-4">
-              <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
-                <div className="flex items-center gap-2 mb-4">
-                  <DollarSign className="w-4 h-4 text-yellow-500" />
-                  <span className="text-white font-medium">Required Balances</span>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold">E</div>
-                      <span className="text-white text-sm">ETH</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-white text-sm">1.0 ETH</div>
-                      <div className="text-green-500 text-xs">✓ Available: 2.24 ETH</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold">U</div>
-                      <span className="text-white text-sm">USDC</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-white text-sm">0 USDC</div>
-                      <div className="text-neutral-400 text-xs">For receiving swap</div>
-                    </div>
-                  </div>
-                </div>
-
+              <CostBreakdown
+                breakdown={costBreakdown}
+                userBalance={userDepositBalance}
+                isLoading={false}
+              />
+            </div>
+            
+            {/* Deposit Button */}
+            {depositStatus === 'insufficient' && (
+              <div className="px-4 pb-4">
                 <button
                   onClick={onDeposit}
-                  className="w-full mt-4 bg-neutral-700 hover:bg-neutral-600 text-white py-2 rounded-lg transition-colors text-sm"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition-colors font-medium cursor-pointer flex items-center justify-center gap-2"
                 >
-                  Deposit
+                  <DollarSign className="w-4 h-4" />
+                  Deposit {formatCost(remaining)} USDC
                 </button>
               </div>
-            </div>
+            )}
+            
             {/* Available Balances */}
-            <div className="px-4 pb-4">
-              <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
-                <div className="flex items-center gap-2 mb-4">
-                  <DollarSign className="w-4 h-4 text-blue-500" />
-                  <span className="text-white font-medium">Available Balances</span>
-                </div>
+            {userDepositBalance > 0 && (
+              <div className="px-4 pb-4">
+                <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
+                  <div className="flex items-center gap-2 mb-4">
+                    <DollarSign className="w-4 h-4 text-blue-500" />
+                    <span className="text-white font-medium">Your Deposit Balance</span>
+                  </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold">E</div>
-                      <span className="text-white text-sm">ETH</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-white text-sm">1.0 ETH</div>
-                      <div className="text-neutral-400 text-xs">Locked</div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold">U</div>
+                        <span className="text-white text-sm">USDC</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-white text-sm">{formatCost(userDepositBalance)}</div>
+                        <div className={`text-xs ${
+                          depositStatus === 'sufficient' ? 'text-green-500' : 'text-yellow-500'
+                        }`}>
+                          {depositStatus === 'sufficient' ? '✓ Sufficient' : '⚠ Need more'}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold">E</div>
-                      <span className="text-white text-sm">ETH</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-white text-sm">1.6 ETH</div>
-                      <div className="text-green-500 text-xs">Available</div>
-                    </div>
-                  </div>
+                  <button
+                    onClick={onWithdraw}
+                    className="w-full mt-4 bg-neutral-700 hover:bg-neutral-600 text-white py-2 rounded-lg transition-colors text-sm cursor-pointer"
+                  >
+                    Withdraw Balance
+                  </button>
                 </div>
-
-                <button
-                  onClick={onWithdraw}
-                  className="w-full mt-4 bg-neutral-700 hover:bg-neutral-600 text-white py-2 rounded-lg transition-colors text-sm"
-                >
-                  Withdraw
-                </button>
               </div>
-            </div>
+            )}
           </>
         )}
 
@@ -199,11 +191,45 @@ export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarPr
       {/* Fixed Deploy Button */}
       <div className="p-4 border-t border-neutral-800 bg-neutral-900">
         <button 
-          onClick={onDeploy}
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
+          onClick={isDeployReady ? onDeploy : undefined}
+          disabled={!isDeployReady}
+          className={`w-full py-3 rounded-lg transition-colors font-medium flex items-center justify-center gap-2 ${
+            !hasNodes
+              ? 'bg-neutral-600 text-neutral-300 cursor-not-allowed'
+              : depositStatus === 'insufficient'
+              ? 'bg-red-600/50 text-red-200 cursor-not-allowed'
+              : depositStatus === 'loading'
+              ? 'bg-yellow-600/50 text-yellow-200 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-700 text-white cursor-pointer'
+          }`}
+          title={
+            !hasNodes
+              ? 'Add trigger and action nodes first'
+              : depositStatus === 'insufficient'
+              ? `Deposit ${formatCost(remaining)} more USDC to deploy`
+              : depositStatus === 'loading'
+              ? 'Confirming deposit transaction'
+              : 'Deploy your automation'
+          }
         >
-          <Play className="w-4 h-4" />
-          Deploy Automation
+          {depositStatus === 'loading' ? (
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          ) : !hasNodes ? (
+            <AlertTriangle className="w-4 h-4" />
+          ) : depositStatus === 'insufficient' ? (
+            <DollarSign className="w-4 h-4" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+          
+          {!hasNodes
+            ? 'Add Nodes First'
+            : depositStatus === 'insufficient'
+            ? `Deposit ${formatCost(remaining)}`
+            : depositStatus === 'loading'
+            ? 'Confirming Deposit...'
+            : 'Deploy Automation'
+          }
         </button>
       </div>
     </div >

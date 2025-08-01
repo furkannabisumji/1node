@@ -24,6 +24,11 @@ export default function CreateAutomation() {
   const {
     nodes,
     edges,
+    costBreakdown,
+    userDepositBalance,
+    depositStatus,
+    getIsDeployReady,
+    updateCostBreakdown,
   } = useAutomationStore();
   const connectedNodeIds = new Set<string>();
   // Use a ref to always get the latest nodes in handleSave
@@ -50,6 +55,23 @@ export default function CreateAutomation() {
         transition: Bounce,
       });
       return
+    }
+    
+    // Check if deposit requirements are met
+    if (!getIsDeployReady()) {
+      const remaining = costBreakdown.total - userDepositBalance;
+      toast.error(`Insufficient deposit balance. You need ${remaining.toFixed(2)} more USDC.`, {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        transition: Bounce,
+      });
+      return;
     }
     // Save automation logic
     const trigger = currentNodes.find((n) => n.type === 'trigger');
@@ -252,7 +274,7 @@ export default function CreateAutomation() {
         });
       }
     }
-  }, [address]);
+  }, [address, getIsDeployReady, costBreakdown.total, userDepositBalance]);
 
   useEffect(() => {
     if (edges) {
