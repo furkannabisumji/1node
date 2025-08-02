@@ -19,6 +19,39 @@ import { ConditionNode } from './nodes/ConditionNode';
 import { NodeConfigModal } from './NodeConfigModal';
 import { useAutomationStore } from '~/stores/useAutomationStore';
 
+// Map frontend node labels to backend API types
+const getBackendNodeType = (label: string): string => {
+  const mapping: Record<string, string> = {
+    // Triggers
+    'Price Change': 'PRICE_THRESHOLD',
+    'Wallet Balance': 'WALLET_BALANCE', 
+    'Gas Price': 'GAS_PRICE',
+    'Time Schedule': 'TIME_SCHEDULE',
+    
+    // Actions
+    'Swap Tokens': 'FUSION_ORDER',
+    'Swap & Alert': 'FUSION_ORDER',
+    'Send/Transfer': 'TRANSFER',
+    'Stake/Unstake': 'STAKE_UNSTAKE',
+    'Send Alert': 'SEND_ALERT',
+    'Provide Liquidity': 'PROVIDE_LIQUIDITY',
+    'Claim Rewards': 'CLAIM_REWARDS',
+    'Rebalance Portfolio': 'REBALANCE_PORTFOLIO',
+    'Execute Strategy': 'EXECUTE_STRATEGY',
+    
+    // Conditions (might not have specific backend types, using labels for now)
+    'Amount Limits': 'AMOUNT_LIMITS',
+    'Time Restrictions': 'TIME_RESTRICTIONS', 
+    'Portfolio Percentage': 'PORTFOLIO_PERCENTAGE',
+    'Market Volume': 'MARKET_VOLUME',
+    'Gas Fee Limit': 'GAS_FEE_LIMIT',
+    'Safety Checks': 'SAFETY_CHECKS',
+    'Loss Limits': 'LOSS_LIMITS',
+  };
+  
+  return mapping[label] || label;
+};
+
 const nodeTypes = {
   trigger: TriggerNode,
   action: ActionNode,
@@ -191,10 +224,7 @@ function AutomationFlowInner() {
           description: `Configure ${nodeData.data.label}`,
           status: 'unconfigured',
           nodeType: nodeData.type as 'trigger' | 'condition' | 'action',
-          type: nodeData.data.label === "Price Change" ? 'PRICE_THRESHOLD' : 
-                nodeData.data.label === 'Wallet Balance' ? 'WALLET_BALANCE' :
-                nodeData.data.label === 'Swap Tokens' ? 'FUSION_ORDER' : 
-                nodeData.data.label,
+          type: getBackendNodeType(nodeData.data.label),
           onConfigure: (data: any, nodeId: string) => handleNodeConfigure(data, data.nodeType, nodeId),
           onDelete: handleNodeDelete
         },
