@@ -1,23 +1,23 @@
 import { Link, useNavigate } from 'react-router';
 import { Zap, ArrowRight, Play, TrendingUp, Shield, Bot, ChevronRight, DollarSign, Clock, Send, Check, Wallet, Menu, X } from 'lucide-react';
-import { ConnectKitButton } from 'connectkit';
+
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import axiosInstance from '~/lib/axios';
-import { useAuth } from '~/auth/AuthProvider';
 
 import { useSignMessage } from 'wagmi';
 import axios from 'axios';
 
 
+
 export function Welcome() {
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
-  const { setUser } = useAuth();
+
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
+  useEffect(() => { 
     const signIn = async () => {
       if (!isConnected || !address) return;
       try {
@@ -68,21 +68,7 @@ export function Welcome() {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-3">
-              <ConnectKitButton.Custom>
-                {({ isConnected, isConnecting, show, hide, address, ensName, chain }) => {
-                  return (
-                    <button
-                      className="flex items-center gap-2 px-4 lg:px-6 py-2 rounded-lg font-medium transition-colors hover:bg-neutral-700 text-white cursor-pointer text-sm lg:text-base"
-                      onClick={show}
-                    >
-                      <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
-                      <span className="hidden sm:inline">
-                        {isConnected ? "Connected" : "Connect"}
-                      </span>
-                    </button>
-                  );
-                }}
-              </ConnectKitButton.Custom>
+              
               <Link
                 to="/onboarding"
                 className="bg-green-500 hover:bg-green-600 text-black px-4 lg:px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 text-sm lg:text-base"
@@ -135,22 +121,7 @@ export function Welcome() {
 
                 {/* Mobile Actions */}
                 <div className="flex flex-col gap-3 pt-4 border-t border-neutral-700">
-                  <ConnectKitButton.Custom>
-                    {({ isConnected, isConnecting, show, hide, address, ensName, chain }) => {
-                      return (
-                        <button
-                          className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg font-medium transition-colors hover:bg-neutral-700 text-white cursor-pointer border border-neutral-600"
-                          onClick={() => {
-                            show && show();
-                            setIsMobileMenuOpen(false);
-                          }}
-                        >
-                          <Wallet className="w-5 h-5" />
-                          {isConnected ? "Wallet Connected" : "Connect Wallet"}
-                        </button>
-                      );
-                    }}
-                  </ConnectKitButton.Custom>
+                 
                   <Link
                     to="/onboarding"
                     className="bg-green-500 hover:bg-green-600 text-black px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
