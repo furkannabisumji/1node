@@ -1,7 +1,7 @@
 import { AppLayout } from '~/components/layout/AppLayout';
 import { PortfolioOverview } from '~/components/dashboard/PortfolioOverview';
 import { RecentActivity } from '~/components/dashboard/RecentActivity';
-import { TrendingUp, AlertTriangle, Activity, DollarSign, Target } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Activity, DollarSign, Target, Plus } from 'lucide-react';
 import { redirect, useLoaderData, useNavigate } from 'react-router';
 import axiosInstance from '~/lib/axios';
 import { useEffect, useState } from 'react';
@@ -111,10 +111,22 @@ export default function Dashboard() {
       <div className="p-4 lg:p-6 mx-auto">
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
-            Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
-          </h1>
-          <p className="text-neutral-400">Here's your portfolio overview and automation insights</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
+                Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
+              </h1>
+              <p className="text-neutral-400">Here's your portfolio overview and automation insights</p>
+            </div>
+            
+            <button
+              onClick={() => navigate('/automations/create')}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors cursor-pointer"
+            >
+              <Plus className="w-5 h-5" />
+              Create Automation
+            </button>
+          </div>
         </div>
 
         {/* Analytics Cards */}
