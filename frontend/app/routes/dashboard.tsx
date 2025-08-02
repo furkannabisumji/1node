@@ -2,7 +2,7 @@ import { AppLayout } from '~/components/layout/AppLayout';
 import { PortfolioOverview } from '~/components/dashboard/PortfolioOverview';
 import { RecentActivity } from '~/components/dashboard/RecentActivity';
 import { TrendingUp, AlertTriangle, Activity, DollarSign, Target } from 'lucide-react';
-import { redirect, useLoaderData, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import axiosInstance from '~/lib/axios';
 import { useEffect, useState } from 'react';
 import { useAuth } from '~/auth/AuthProvider';
@@ -50,14 +50,9 @@ export default function Dashboard() {
         const authRes = await axiosInstance.get(`/auth/me`, {
           validateStatus: () => true,
         })
-        
-        console.log('Auth response:', authRes)
+
         setUser(authRes.data.user)
-        
-        if (authRes.status === 401) {
-          navigate('/onboarding')
-          return
-        }
+       
         
         // Fetch portfolio and analytics data in parallel
         const [portfolioRes, analyticsRes] = await Promise.all([
@@ -75,7 +70,7 @@ export default function Dashboard() {
       } catch (err: any) {
         console.error('Dashboard data fetch error:', err)
         if (err?.response?.status === 401) {
-          navigate('/onboarding')
+          // UnAuthenticated
         } else {
           setError(err?.response?.data?.error || 'Failed to load dashboard data')
           setLoading(false)

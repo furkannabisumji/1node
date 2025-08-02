@@ -1,5 +1,6 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { redirect, useNavigate } from 'react-router'
 import axiosInstance from '~/lib/axios'
 
 
@@ -13,13 +14,15 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null)
-
+    const navigate = useNavigate()
     const fetchUser = async () => {
         try {
             const { data } = await axiosInstance.get('/auth/me')
 
             setUser(data.user)
         } catch (err) {
+            console.log("Auth Error is ", err)
+            navigate('/onboarding')
             setUser(null)
         }
     }
