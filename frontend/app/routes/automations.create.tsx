@@ -10,8 +10,16 @@ import { TopActionBar } from '~/components/automation/TopActionBar';
 import { WithdrawModal } from '~/components/automation/WithdrawModal';
 import { useAutomationStore } from '~/stores/useAutomationStore';
 import axiosInstance from '~/lib/axios';
-import { Bounce, toast, ToastContainer } from 'react-toastify';
-import { useAuth } from '~/auth/AuthProvider';
+import { Bounce, toast } from 'react-toastify';
+
+import type { Route } from "./+types/automations.create";
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Create Automation - 1Node DeFi Automations" },
+    { name: "description", content: "Create a new automation for 1Node DeFi Automations" },
+  ];
+}
 
 export default function CreateAutomation() {
   const { address } = useAccount();

@@ -52,8 +52,7 @@ export default function App() {
       <ToastContainer 
         theme="dark"
         toastClassName="!bg-neutral-900 !text-white !border !border-neutral-700"
-        bodyClassName="!text-white"
-        progressClassName="!bg-green-500"
+    
       />
     </Providers>
   );

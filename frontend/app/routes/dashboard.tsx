@@ -6,7 +6,14 @@ import { redirect, useLoaderData, useNavigate } from 'react-router';
 import axiosInstance from '~/lib/axios';
 import { useEffect, useState } from 'react';
 import { useAuth } from '~/auth/AuthProvider';
+import type { Route } from "./+types/dashboard";
 
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Dashboard - 1Node DeFi Automations" },
+    { name: "description", content: "Dashboard for 1Node DeFi Automations" },
+  ];
+}
 
 const aiInsights = [
   {
