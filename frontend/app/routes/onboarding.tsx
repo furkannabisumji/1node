@@ -88,7 +88,7 @@ export default function Onboarding() {
   const [registering, setRegistering] = useState(false);
   const [userRegisterError, setUserRegisterError] = useState('');
   const [showAlreadyRegistered, setShowAlreadyRegistered] = useState(false);
-
+  
   // Hooks
   const { isConnected, address } = useAccount();
   const { signMessageAsync } = useSignMessage();
