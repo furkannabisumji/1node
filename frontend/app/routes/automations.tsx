@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { AppLayout } from '~/components/layout/AppLayout';
 import { AutomationCard } from '~/components/automations/AutomationCard';
-import {Plus} from 'lucide-react';
-import {Link} from "react-router";
+import { Plus } from 'lucide-react';
+import { Link } from "react-router";
 import axiosInstance from '~/lib/axios';
 import type { Route } from "./+types/automations";
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ }: Route.MetaArgs) {
   return [
     { title: "Automations - 1Node DeFi Automations" },
     { name: "description", content: "Automations for 1Node DeFi Automations" },
@@ -47,8 +47,8 @@ export default function Automations() {
 
           <div className="p-4">
             <Link
-                to="/automations/create"
-                className="w-full border border-white cursor-pointer text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              to="/automations/create"
+              className="w-full border border-white cursor-pointer text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
             >
               <Plus className="h-4 w-4" />
               New Automation

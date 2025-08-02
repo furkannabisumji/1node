@@ -769,7 +769,7 @@ export default function AutomationDetail() {
                 <div key={execution.id} className="flex items-center justify-between p-3 bg-neutral-800 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${
-                      execution.status === 'SUCCESS' ? 'bg-green-500' : 
+                      execution.status === 'COMPLETED' ? 'bg-green-500' : 
                       execution.status === 'FAILED' ? 'bg-red-500' : 'bg-yellow-500'
                     }`}></div>
                     <span className="text-white text-sm">{execution.status}</span>
