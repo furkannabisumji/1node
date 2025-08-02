@@ -8,9 +8,10 @@ interface CostBreakdownProps {
 }
 
 export function CostBreakdown({ breakdown, userBalance, isLoading = false }: CostBreakdownProps) {
-  const isInsufficientBalance = userBalance < breakdown.total;
-  const remaining = Math.max(0, breakdown.total - userBalance);
+    const isInsufficientBalance = userBalance < Number(Number(breakdown.total).toFixed(5));
 
+  const remaining = Math.max(0, breakdown.total - userBalance);
+console.log(breakdown, userBalance, remaining);
   if (isLoading) {
     return (
       <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
@@ -82,7 +83,7 @@ export function CostBreakdown({ breakdown, userBalance, isLoading = false }: Cos
           {/* Balance Status */}
           <div className="bg-neutral-900 rounded-lg p-3 mt-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-neutral-400 text-sm">Your Balance</span>
+              <span className="text-neutral-400 text-sm">Amount Deposited</span>
               <span className="text-white font-medium">{formatCost(userBalance)}</span>
             </div>
             
