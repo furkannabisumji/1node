@@ -14,12 +14,12 @@ export function useUSDCWithdraw(selectedChain: SupportedChain = 'optimism') {
   const usdcAddress = CONTRACTS.USDC[chainId as keyof typeof CONTRACTS.USDC];
   const vaultAddress = CONTRACTS.VAULT[chainId as keyof typeof CONTRACTS.VAULT];
 
-  // Read vault balance from contract
+  // Read vault balance from contract (user-specific)
   const { data: vaultBalance, refetch: refetchVaultBalance } = useReadContract({
     address: vaultAddress as `0x${string}`,
     abi: VAULT_ABI,
-    functionName: 'getBalance',
-    args: [usdcAddress as `0x${string}`], // Pass USDC token address
+    functionName: 'balances',
+    args: [address as `0x${string}`, usdcAddress as `0x${string}`], // user address, token address
     query: { enabled: !!address && !!usdcAddress },
   });
 

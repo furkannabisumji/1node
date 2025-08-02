@@ -109,9 +109,9 @@ export default function CreateAutomation() {
 
     // Generate dynamic description based on node configurations
     const generateDescription = () => {
-      const triggerConfig = trigger.data.config as any;
-      const triggerType = trigger.data.label as string;
-      const actionType = action.data.label as string;
+      const triggerConfig = (trigger.data?.config || {}) as any;
+      const triggerType = trigger.data?.label as string;
+      const actionType = action.data?.label as string;
       
       let description = '';
       
@@ -128,13 +128,20 @@ export default function CreateAutomation() {
                             triggerConfig.operator === 'lt' ? 'falls below' :
                             'reaches';
         description += `When ${triggerConfig.token || 'ETH'} ${operatorText} $${triggerConfig.threshold || 'target'}`;
+      } else if (triggerType === 'Price Threshold') {
+        const operatorText = triggerConfig.operator === 'gte' ? 'hits' :
+                            triggerConfig.operator === 'lte' ? 'drops to' :
+                            triggerConfig.operator === 'gt' ? 'exceeds' :
+                            triggerConfig.operator === 'lt' ? 'falls below' :
+                            'reaches';
+        description += `When ${triggerConfig.token || 'ETH'} ${operatorText} $${triggerConfig.threshold || 'target'}`;
       } else if (triggerType === 'Gas Price') {
         const conditionText = triggerConfig.condition === 'less_than' ? 'drops below' : 'exceeds';
         description += `When gas price ${conditionText} ${triggerConfig.gasLimit || 'limit'} USD`;
       } else if (triggerType === 'Time Schedule') {
         description += `On ${triggerConfig.scheduleType || 'schedule'} at ${triggerConfig.time || 'time'}`;
       } else {
-        description += `When ${triggerType.toLowerCase()} conditions are met`;
+        description += `When ${triggerType?.toLowerCase() || 'trigger'} conditions are met`;
       }
       
       description += ', ';

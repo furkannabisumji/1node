@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useAutomationStore } from '~/stores/useAutomationStore';
 import { CONTRACTS, USDC_ABI, VAULT_ABI, formatUSDC, parseUSDC } from '~/utils/contracts';
@@ -6,6 +6,7 @@ import type { SupportedChain } from '~/stores/useAutomationStore';
 
 export function useUSDCDeposit() {
   const { address } = useAccount();
+  const depositSuccessProcessed = useRef(false);
   const {
     selectedDepositChain,
     setUserDepositBalance,
@@ -39,12 +40,12 @@ export function useUSDCDeposit() {
     query: { enabled: !!address },
   });
 
-  // Read vault balance from contract (token-specific)
+  // Read vault balance from contract (user-specific)
   const { data: vaultBalance, refetch: refetchVaultBalance } = useReadContract({
     address: vaultAddress as `0x${string}`,
     abi: VAULT_ABI,
-    functionName: 'getBalance',
-    args: [usdcAddress as `0x${string}`], // Pass token address
+    functionName: 'balances',
+    args: [address as `0x${string}`, usdcAddress as `0x${string}`], // user address, token address
     query: { enabled: !!address && !!usdcAddress },
   });
 
@@ -64,12 +65,13 @@ export function useUSDCDeposit() {
 
   // Update store with vault balance
   useEffect(() => {
+    console.log('Vault balance from contract:', vaultBalance);
     if (vaultBalance !== undefined) {
       const balance = formatUSDC(vaultBalance as bigint);
+      console.log('Formatted vault balance:', balance);
       setUserDepositBalance(balance);
     }
   }, [vaultBalance, setUserDepositBalance]);
-
   // Update loading state
   useEffect(() => {
     const isLoading = isApprovePending || isApproveLoading || isDepositPending || isDepositLoading;
@@ -91,26 +93,36 @@ export function useUSDCDeposit() {
   }, [isApproveSuccess, refetchAllowance]);
 
   useEffect(() => {
-    if (isDepositSuccess) {
+    if (isDepositSuccess && !depositSuccessProcessed.current) {
+      depositSuccessProcessed.current = true;
+      console.log('Deposit success detected, refetching balances...');
+      
       // Refetch balances and force status recalculation
       const handleDepositSuccess = async () => {
         try {
           // Refetch the vault balance
+          console.log('Refetching vault balance...');
           const { data: newVaultBalance } = await refetchVaultBalance();
+          console.log('New vault balance from refetch:', newVaultBalance);
+          
           await refetchUSDCBalance();
           
           // Update the store with the new balance
           if (newVaultBalance !== undefined) {
             const balance = formatUSDC(newVaultBalance as bigint);
+            console.log('Setting user deposit balance to:', balance);
             setUserDepositBalance(balance);
           }
           
           // Force status recalculation after balance update
           setTimeout(() => {
+            console.log('Forcing status recalculation...');
             forceStatusRecalculation();
+            depositSuccessProcessed.current = false; // Reset for next deposit
           }, 100);
         } catch (error) {
           console.error('Error refetching balances after deposit:', error);
+          depositSuccessProcessed.current = false; // Reset on error
           // Fallback: force status recalculation after delay
           setTimeout(() => {
             forceStatusRecalculation();

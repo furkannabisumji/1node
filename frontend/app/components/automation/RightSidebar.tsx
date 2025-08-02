@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Play, DollarSign, AlertTriangle, Plus, ChevronDown } from 'lucide-react';
 import { useAutomationStore } from '~/stores/useAutomationStore';
 import { SUPPORTED_CHAINS } from '~/utils/contracts';
@@ -16,6 +16,7 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
   const [activeTab, setActiveTab] = useState<'simulation' | 'requirements' | 'insights'>('requirements');
   const [additionalAmount, setAdditionalAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const depositSuccessProcessed = useRef(false);
   
   const {
     costBreakdown,
@@ -41,22 +42,27 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
   
   const isDeployReady = getIsDeployReady();
   const hasNodes = nodes.length > 0;
-  const remaining = Math.max(0, costBreakdown.total - userDepositBalance);
+  const hasTrigger = nodes.some(node => node.type === 'trigger');
+  const hasAction = nodes.some(node => node.type === 'action');
+  const hasCompleteAutomation = hasTrigger && hasAction;
+  // Fix floating point precision issues
+  const rawRemaining = costBreakdown.total - userDepositBalance;
+  const remaining = Math.max(0, rawRemaining < 0.001 ? 0 : rawRemaining);
   const additionalAmountValue = parseFloat(additionalAmount) || 0;
   const totalDepositAmount = remaining + additionalAmountValue;
   const hasInsufficientUSDC = totalDepositAmount > 0 && totalDepositAmount > usdcBalance;
   const canDeposit = totalDepositAmount > 0 && !hasInsufficientUSDC && !isProcessing;
 
-  // Debug logging to help identify the issue
-  console.log('Debug values:', {
-    costBreakdownTotal: costBreakdown.total,
+  // Debug logging to diagnose deploy button issue
+  console.log('Deploy button debug:', {
     userDepositBalance,
+    costBreakdownTotal: costBreakdown.total,
     remaining,
-    additionalAmountValue,
-    totalDepositAmount,
-    usdcBalance,
-    hasInsufficientUSDC,
-    canDeposit
+    depositStatus,
+    isDeployReady,
+    hasCompleteAutomation,
+    hasTrigger,
+    hasAction
   });
 
   const handleDeposit = async () => {
@@ -155,7 +161,9 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
 
   // Handle successful deposit
   useEffect(() => {
-    if (isDepositSuccess) {
+    if (isDepositSuccess && isProcessing && !depositSuccessProcessed.current) {
+      depositSuccessProcessed.current = true;
+      
       toast.success('Deposit successful!', {
         position: 'bottom-center',
         autoClose: 3000,
@@ -168,9 +176,10 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
       setTimeout(() => {
         setIsProcessing(false);
         setAdditionalAmount('');
+        depositSuccessProcessed.current = false; // Reset for next deposit
       }, 200);
     }
-  }, [isDepositSuccess, refetchBalances]);
+  }, [isDepositSuccess, isProcessing, refetchBalances]);
 
   return (
     <div className="w-96 bg-neutral-900 border-l border-neutral-800 flex flex-col h-full">
@@ -272,7 +281,7 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
 
         {activeTab === 'requirements' && (
           <>
-            {hasNodes ? (
+            {hasCompleteAutomation ? (
               <>
                 {/* Cost Breakdown */}
                 <div className="px-4 pb-4">
@@ -459,12 +468,29 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
                       <Plus className="w-8 h-8 text-neutral-400" />
                     </div>
                   </div>
-                  <h3 className="text-white font-medium mb-2">No Nodes Selected</h3>
+                  <h3 className="text-white font-medium mb-2">
+                    {!hasNodes 
+                      ? 'No Nodes Selected' 
+                      : !hasTrigger 
+                        ? 'Missing Trigger Node'
+                        : 'Missing Action Node'
+                    }
+                  </h3>
                   <p className="text-neutral-400 text-sm mb-4">
-                    Add trigger and action nodes from the left sidebar to see cost breakdown and deposit requirements.
+                    {!hasNodes 
+                      ? 'Add trigger and action nodes from the left sidebar to see cost breakdown and deposit requirements.'
+                      : !hasTrigger
+                        ? 'Add a trigger node (when condition) to define what starts your automation.'
+                        : 'Add an action node (then action) to define what your automation will do.'
+                    }
                   </p>
                   <div className="text-xs text-neutral-500">
-                    Start by dragging a trigger node to the canvas
+                    {!hasNodes 
+                      ? 'Start by dragging a trigger node to the canvas'
+                      : !hasTrigger
+                        ? 'Drag a trigger node from the left sidebar'
+                        : 'Drag an action node from the left sidebar'
+                    }
                   </div>
                 </div>
               </div>

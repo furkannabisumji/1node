@@ -205,6 +205,10 @@ export function getNodeCost(node: Node): number {
 
 // Format cost for display
 export function formatCost(cost: number): string {
+  // Handle invalid or undefined values
+  if (typeof cost !== 'number' || isNaN(cost) || cost < 0) {
+    return '$0.00 USDC';
+  }
   return `$${cost.toFixed(2)} USDC`;
 }
 
