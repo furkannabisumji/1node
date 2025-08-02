@@ -38,7 +38,7 @@ function ConnectWalletStep({ onConnect }: { onConnect: () => void }) {
                 <button
                   className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${isConnected
                     ? "bg-green-600 text-white cursor-default"
-                    : "bg-neutral-800 hover:bg-neutral-700 text-white"
+                    : "bg-neutral-800 hover:bg-neutral-700 text-white cursor-pointer"
                     }`}
                   onClick={show}
                   disabled={isConnected}

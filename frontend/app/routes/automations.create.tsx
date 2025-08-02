@@ -8,7 +8,6 @@ import { LeftSidebar } from '~/components/automation/LeftSidebar';
 import { RightSidebar } from '~/components/automation/RightSidebar';
 import { TopActionBar } from '~/components/automation/TopActionBar';
 import { WithdrawModal } from '~/components/automation/WithdrawModal';
-import { DepositModal } from '~/components/automation/DepositModal';
 import { useAutomationStore } from '~/stores/useAutomationStore';
 import axiosInstance from '~/lib/axios';
 import { Bounce, toast, ToastContainer } from 'react-toastify';
@@ -17,13 +16,17 @@ import { useAuth } from '~/auth/AuthProvider';
 export default function CreateAutomation() {
   const { address } = useAccount();
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [automationStatus, setAutomationStatus] = useState<'draft' | 'deployed' | 'active'>('draft');
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
   const unconnectedRef = useRef<Node[]>([]);
   const {
     nodes,
     edges,
+    costBreakdown,
+    userDepositBalance,
+    depositStatus,
+    getIsDeployReady,
+    updateCostBreakdown,
   } = useAutomationStore();
   const connectedNodeIds = new Set<string>();
   // Use a ref to always get the latest nodes in handleSave
@@ -50,6 +53,23 @@ export default function CreateAutomation() {
         transition: Bounce,
       });
       return
+    }
+    
+    // Check if deposit requirements are met
+    if (!getIsDeployReady()) {
+      const remaining = costBreakdown.total - userDepositBalance;
+      toast.error(`Insufficient deposit balance. You need ${remaining.toFixed(2)} more USDC.`, {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        transition: Bounce,
+      });
+      return;
     }
     // Save automation logic
     const trigger = currentNodes.find((n) => n.type === 'trigger');
@@ -252,7 +272,7 @@ export default function CreateAutomation() {
         });
       }
     }
-  }, [address]);
+  }, [address, getIsDeployReady, costBreakdown.total, userDepositBalance]);
 
   useEffect(() => {
     if (edges) {
@@ -319,7 +339,6 @@ export default function CreateAutomation() {
           {/* Right Sidebar */}
           <RightSidebar
             onWithdraw={() => setIsWithdrawModalOpen(true)}
-            onDeposit={() => setIsDepositModalOpen(true)}
             onDeploy={handleDeploy}
           />
         </div>
@@ -328,10 +347,6 @@ export default function CreateAutomation() {
         <WithdrawModal
           isOpen={isWithdrawModalOpen}
           onClose={() => setIsWithdrawModalOpen(false)}
-        />
-        <DepositModal
-          isOpen={isDepositModalOpen}
-          onClose={() => setIsDepositModalOpen(false)}
         />
       </div>
     </AppLayout>

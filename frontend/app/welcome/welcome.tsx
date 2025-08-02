@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router';
-import { Zap, ArrowRight, Play, TrendingUp, Shield, Bot, ChevronRight, DollarSign, Clock, Send, Check, Wallet } from 'lucide-react';
+import { Zap, ArrowRight, Play, TrendingUp, Shield, Bot, ChevronRight, DollarSign, Clock, Send, Check, Wallet, Menu, X } from 'lucide-react';
 import { ConnectKitButton } from 'connectkit';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import axiosInstance from '~/lib/axios';
 import { useAuth } from '~/auth/AuthProvider';
@@ -15,6 +15,7 @@ export function Welcome() {
   const { signMessageAsync } = useSignMessage();
   const { setUser } = useAuth();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const signIn = async () => {
@@ -49,49 +50,119 @@ export function Welcome() {
       <header className="border-b border-neutral-800 bg-black/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
+            {/* Logo */}
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
                 <span className="text-black font-bold text-lg">1</span>
               </div>
               <span className="text-white font-bold text-xl">Node</span>
             </div>
-            <nav className="hidden md:flex items-center gap-8">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-8">
               <a href="#features" className="text-neutral-300 hover:text-white transition-colors">Features</a>
               <a href="#automation" className="text-neutral-300 hover:text-white transition-colors">Automation</a>
               <a href="#examples" className="text-neutral-300 hover:text-white transition-colors">Examples</a>
-              <a href="#pricing" className="text-neutral-300 hover:text-white transition-colors">Pricing</a>
+
             </nav>
-            <div className="flex items-center gap-4">
+
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-3">
               <ConnectKitButton.Custom>
                 {({ isConnected, isConnecting, show, hide, address, ensName, chain }) => {
                   return (
-                    <>
-                      <button
-                        className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors 
-                          hover:bg-neutral-700 text-white
-                          `}
-                        onClick={show}
-                      // disabled={isConnected}
-                      >
-                        <Wallet className="w-5 h-5" />
-                        {isConnected ? "Wallet Connected" : "Connect Wallet"}
-
-
-                      </button>
-
-                    </>
+                    <button
+                      className="flex items-center gap-2 px-4 lg:px-6 py-2 rounded-lg font-medium transition-colors hover:bg-neutral-700 text-white cursor-pointer text-sm lg:text-base"
+                      onClick={show}
+                    >
+                      <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
+                      <span className="hidden sm:inline">
+                        {isConnected ? "Connected" : "Connect"}
+                      </span>
+                    </button>
                   );
                 }}
               </ConnectKitButton.Custom>
               <Link
                 to="/onboarding"
-                className="bg-green-500 hover:bg-green-600 text-black px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                className="bg-green-500 hover:bg-green-600 text-black px-4 lg:px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 text-sm lg:text-base"
               >
-                Get Started
+                <span className="hidden sm:inline">Get Started</span>
+                <span className="sm:hidden">Start</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-neutral-800 transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6 text-white" />
+              ) : (
+                <Menu className="w-6 h-6 text-white" />
+              )}
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 border-t border-neutral-800">
+              <nav className="flex flex-col gap-4 pt-4">
+                <a 
+                  href="#features" 
+                  className="text-neutral-300 hover:text-white transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Features
+                </a>
+                <a 
+                  href="#automation" 
+                  className="text-neutral-300 hover:text-white transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Automation
+                </a>
+                <a 
+                  href="#examples" 
+                  className="text-neutral-300 hover:text-white transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Examples
+                </a>
+
+                {/* Mobile Actions */}
+                <div className="flex flex-col gap-3 pt-4 border-t border-neutral-700">
+                  <ConnectKitButton.Custom>
+                    {({ isConnected, isConnecting, show, hide, address, ensName, chain }) => {
+                      return (
+                        <button
+                          className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg font-medium transition-colors hover:bg-neutral-700 text-white cursor-pointer border border-neutral-600"
+                          onClick={() => {
+                            show && show();
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          <Wallet className="w-5 h-5" />
+                          {isConnected ? "Wallet Connected" : "Connect Wallet"}
+                        </button>
+                      );
+                    }}
+                  </ConnectKitButton.Custom>
+                  <Link
+                    to="/onboarding"
+                    className="bg-green-500 hover:bg-green-600 text-black px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Get Started
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
@@ -155,62 +226,72 @@ export function Welcome() {
           </div>
 
           {/* Mock Automation Builder Interface */}
-          <div className="bg-black border border-neutral-800 rounded-2xl p-8 mb-12">
-            <div className="flex gap-8">
+          <div className="bg-black border border-neutral-800 rounded-2xl p-4 md:p-8 mb-12">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
               {/* Left Sidebar Mock */}
-              <div className="w-80 bg-neutral-900 border border-neutral-800 rounded-lg p-4">
-                <div className="text-white font-medium mb-4 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-green-500" />
-                  Triggers
-                </div>
-                <div className="space-y-2 mb-6">
-                  <div className="bg-neutral-800 rounded-lg p-3 flex items-center gap-3 border border-neutral-700">
-                    <DollarSign className="w-4 h-4 text-green-400" />
-                    <div>
-                      <div className="text-white text-sm font-medium">Price Change</div>
-                      <div className="text-neutral-400 text-xs">Token price movement</div>
+              <div className="w-full lg:w-80 bg-neutral-900 border border-neutral-800 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+                  <div>
+                    <div className="text-white font-medium mb-4 flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-green-500" />
+                      Triggers
+                    </div>
+                    <div className="space-y-2 mb-6">
+                      <div className="bg-neutral-800 rounded-lg p-3 flex items-center gap-3 border border-neutral-700">
+                        <DollarSign className="w-4 h-4 text-green-400" />
+                        <div>
+                          <div className="text-white text-sm font-medium">Price Change</div>
+                          <div className="text-neutral-400 text-xs">Token price movement</div>
+                        </div>
+                      </div>
+                      <div className="bg-neutral-800 rounded-lg p-3 flex items-center gap-3 border border-neutral-700">
+                        <Clock className="w-4 h-4 text-green-400" />
+                        <div>
+                          <div className="text-white text-sm font-medium">Time Schedule</div>
+                          <div className="text-neutral-400 text-xs">Recurring schedule</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-neutral-800 rounded-lg p-3 flex items-center gap-3 border border-neutral-700">
-                    <Clock className="w-4 h-4 text-green-400" />
-                    <div>
-                      <div className="text-white text-sm font-medium">Time Schedule</div>
-                      <div className="text-neutral-400 text-xs">Recurring schedule</div>
+                  
+                  <div>
+                    <div className="text-white font-medium mb-4 flex items-center gap-2">
+                      <Play className="w-4 h-4 text-purple-500" />
+                      Actions
                     </div>
-                  </div>
-                </div>
-                <div className="text-white font-medium mb-4 flex items-center gap-2">
-                  <Play className="w-4 h-4 text-purple-500" />
-                  Actions
-                </div>
-                <div className="space-y-2">
-                  <div className="bg-neutral-800 rounded-lg p-3 flex items-center gap-3 border border-neutral-700">
-                    <Send className="w-4 h-4 text-purple-400" />
-                    <div>
-                      <div className="text-white text-sm font-medium">Swap Tokens</div>
-                      <div className="text-neutral-400 text-xs">Exchange tokens</div>
+                    <div className="space-y-2">
+                      <div className="bg-neutral-800 rounded-lg p-3 flex items-center gap-3 border border-neutral-700">
+                        <Send className="w-4 h-4 text-purple-400" />
+                        <div>
+                          <div className="text-white text-sm font-medium">Swap Tokens</div>
+                          <div className="text-neutral-400 text-xs">Exchange tokens</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Canvas Mock */}
-              <div className="flex-1 bg-black border border-neutral-800 rounded-lg relative min-h-80">
+              <div className="flex-1 bg-black border border-neutral-800 rounded-lg relative min-h-64 md:min-h-80">
                 <div className="absolute inset-0 opacity-20">
-                  <div className="grid grid-cols-12 grid-rows-8 h-full w-full">
+                  <div className="grid grid-cols-8 md:grid-cols-12 grid-rows-6 md:grid-rows-8 h-full w-full">
                     {Array.from({ length: 96 }).map((_, i) => (
-                      <div key={i} className="border-r border-b border-neutral-700"></div>
+                      <div 
+                        key={i} 
+                        className={`border-r border-b border-neutral-700 ${i >= 48 ? 'hidden md:block' : ''}`}
+                      ></div>
                     ))}
                   </div>
                 </div>
                 {/* Sample Flow */}
-                <div className="relative p-8">
-                  <div className="flex items-center gap-8">
+                <div className="relative p-4 md:p-8">
+                  <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
                     {/* Trigger Node */}
-                    <div className="bg-neutral-800 border-2 border-green-500/50 rounded-lg p-4 min-w-48">
+                    <div className="w-full md:w-auto bg-neutral-800 border-2 border-green-500/50 rounded-lg p-3 md:p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <DollarSign className="w-4 h-4 text-green-500" />
-                        <span className="text-white font-medium">Price Change</span>
+                        <span className="text-white font-medium text-sm md:text-base">Price Change</span>
                       </div>
                       <p className="text-neutral-400 text-xs">ETH drops 10%</p>
                       <div className="flex items-center gap-2 mt-3">
@@ -220,13 +301,15 @@ export function Welcome() {
                     </div>
 
                     {/* Arrow */}
-                    <ChevronRight className="w-6 h-6 text-green-500" />
+                    <div className="transform rotate-90 md:rotate-0">
+                      <ChevronRight className="w-6 h-6 text-green-500" />
+                    </div>
 
                     {/* Action Node */}
-                    <div className="bg-neutral-800 border-2 border-purple-500/50 rounded-lg p-4 min-w-48">
+                    <div className="w-full md:w-auto bg-neutral-800 border-2 border-purple-500/50 rounded-lg p-3 md:p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Send className="w-4 h-4 text-purple-500" />
-                        <span className="text-white font-medium">Swap Tokens</span>
+                        <span className="text-white font-medium text-sm md:text-base">Swap Tokens</span>
                       </div>
                       <p className="text-neutral-400 text-xs">50% ETH → USDC</p>
                       <div className="flex items-center gap-2 mt-3">
