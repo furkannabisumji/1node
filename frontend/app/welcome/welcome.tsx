@@ -41,7 +41,7 @@ export function Welcome() {
           console.error('Unexpected error:', err);
         }
       }
-    };
+    };  
     signIn();
   }, [isConnected])
   return (
