@@ -16,29 +16,29 @@ export interface CostBreakdown {
   total: number;
 }
 
-// Node cost configuration
+// Node cost configuration (Reduced for testing purposes)
 const NODE_COSTS = {
   // Triggers
   'PRICE_THRESHOLD': {
-    base: 2.0,
+    base: 0.3,
     description: 'Price monitoring & API calls',
     category: 'trigger' as const,
     icon: '📈'
   },
   'WALLET_BALANCE': {
-    base: 2.0,
+    base: 0.3,
     description: 'Balance checking & monitoring',
     category: 'trigger' as const,
     icon: '💰'
   },
   'GAS_PRICE': {
-    base: 1.5,
+    base: 0.2,
     description: 'Gas price monitoring',
     category: 'trigger' as const,
     icon: '⛽'
   },
   'TIME_SCHEDULE': {
-    base: 1.0,
+    base: 0.2,
     description: 'Scheduled execution',
     category: 'trigger' as const,
     icon: '⏰'
@@ -46,35 +46,35 @@ const NODE_COSTS = {
   
   // Actions
   'FUSION_ORDER': {
-    base: 7.5,
+    base: 0.5,
     description: 'Token swap via 1inch Fusion+',
     category: 'action' as const,
     icon: '🔄'
   },
   'TRANSFER': {
-    base: 1.5,
+    base: 0.3,
     description: 'Token transfer',
     category: 'action' as const,
     icon: '📤'
   },
   'STAKE_UNSTAKE': {
-    base: 3.0,
+    base: 0.4,
     description: 'Staking/Unstaking operations',
     category: 'action' as const,
     icon: '🥩'
   },
   'SEND_ALERT': {
-    base: 0.5,
+    base: 0.1,
     description: 'Notification alerts',
     category: 'action' as const,
     icon: '🔔'
   },
 } as const;
 
-// Cross-chain operation costs
-const CROSS_CHAIN_COST = 4.0;
-const PLATFORM_FEE = 1.0;
-const SAFETY_BUFFER_PERCENT = 0.20; // 20%
+// Cross-chain operation costs (Reduced for testing)
+const CROSS_CHAIN_COST = 0.3;
+const PLATFORM_FEE = 0.2;
+const SAFETY_BUFFER_PERCENT = 0.10; // 10% (Reduced from 20%)
 
 export function calculateCostBreakdown(nodes: Node[], edges: Edge[]): CostBreakdown {
   const items: CostItem[] = [];
@@ -83,10 +83,13 @@ export function calculateCostBreakdown(nodes: Node[], edges: Edge[]): CostBreakd
   // Analyze nodes for costs
   const nodesByType = nodes.reduce((acc, node) => {
     const nodeType = node.data?.type || node.type;
-    if (!acc[nodeType]) {
-      acc[nodeType] = [];
+    // Only process nodes with valid string nodeType
+    if (typeof nodeType === 'string' && nodeType.trim() !== '') {
+      if (!acc[nodeType]) {
+        acc[nodeType] = [];
+      }
+      acc[nodeType].push(node);
     }
-    acc[nodeType].push(node);
     return acc;
   }, {} as Record<string, Node[]>);
 
@@ -139,7 +142,7 @@ export function calculateCostBreakdown(nodes: Node[], edges: Edge[]): CostBreakd
   items.push({
     id: 'safety-buffer',
     category: 'buffer',
-    name: '🛡️ Safety Buffer (20%)',
+    name: '🛡️ Safety Buffer (10%)',
     description: 'Buffer for gas price fluctuations',
     cost: buffer,
     icon: '🛡️',
@@ -177,9 +180,13 @@ function checkForCrossChainOperations(nodes: Node[]): boolean {
   
   actionNodes.forEach(node => {
     const config = node.data?.config;
-    if (config?.fromChain) chainIds.add(config.fromChain);
-    if (config?.toChain) chainIds.add(config.toChain);
-    if (config?.chainId) chainIds.add(config.chainId);
+    // Only process config if it's a proper object with properties
+    if (config && typeof config === 'object' && !Array.isArray(config)) {
+      const configObj = config as Record<string, any>;
+      if (typeof configObj.fromChain === 'number') chainIds.add(configObj.fromChain);
+      if (typeof configObj.toChain === 'number') chainIds.add(configObj.toChain);
+      if (typeof configObj.chainId === 'number') chainIds.add(configObj.chainId);
+    }
   });
   
   return chainIds.size > 1;
@@ -188,8 +195,12 @@ function checkForCrossChainOperations(nodes: Node[]): boolean {
 // Get cost for a single node (for tooltips/highlights)
 export function getNodeCost(node: Node): number {
   const nodeType = node.data?.type || node.type;
-  const costConfig = NODE_COSTS[nodeType as keyof typeof NODE_COSTS];
-  return costConfig?.base || 0;
+  // Only process valid string nodeType
+  if (typeof nodeType === 'string' && nodeType.trim() !== '') {
+    const costConfig = NODE_COSTS[nodeType as keyof typeof NODE_COSTS];
+    return costConfig?.base || 0;
+  }
+  return 0;
 }
 
 // Format cost for display
