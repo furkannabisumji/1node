@@ -19,17 +19,75 @@ export interface VaultTransaction {
 }
 
 class VaultService {
-  private provider: ethers.JsonRpcProvider;
-  private vaultContract: ethers.Contract;
-  private executorWallet: ethers.Wallet;
+  private providers: Map<number, ethers.JsonRpcProvider>;
+  private vaultContracts: Map<number, ethers.Contract>;
+  private executorWallets: Map<number, ethers.Wallet>;
 
   constructor() {
-    // Initialize provider and contract
-    this.provider = new ethers.JsonRpcProvider(SUPPORTED_CHAINS.OPTIMISM.rpcUrl);
-    this.executorWallet = new ethers.Wallet(config.executorPrivateKey, this.provider);
-    
-    // Use vault contract address from config
-    this.vaultContract = new ethers.Contract(config.vaultContractAddress, VAULT_ABI, this.executorWallet);
+    this.providers = new Map();
+    this.vaultContracts = new Map();
+    this.executorWallets = new Map();
+
+    // Initialize providers, wallets, and contracts for supported chains
+    this.initializeChain(SUPPORTED_CHAINS.OPTIMISM.id, SUPPORTED_CHAINS.OPTIMISM.rpcUrl, config.vaultContractAddress);
+    this.initializeChain(SUPPORTED_CHAINS.ETHERLINK.id, SUPPORTED_CHAINS.ETHERLINK.rpcUrl, config.vaultContractAddressEtherlink);
+  }
+
+  private initializeChain(chainId: number, rpcUrl: string, contractAddress: string) {
+    try {
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      const executorWallet = new ethers.Wallet(config.executorPrivateKey, provider);
+      const vaultContract = new ethers.Contract(contractAddress, VAULT_ABI, executorWallet);
+
+      this.providers.set(chainId, provider);
+      this.executorWallets.set(chainId, executorWallet);
+      this.vaultContracts.set(chainId, vaultContract);
+
+      logger.info(`Initialized vault for chain ${chainId}`, { contractAddress, rpcUrl });
+    } catch (error) {
+      logger.error(`Failed to initialize chain ${chainId}:`, error);
+    }
+  }
+
+  private getVaultContract(chainId: number): ethers.Contract {
+    const contract = this.vaultContracts.get(chainId);
+    if (!contract) {
+      throw new Error(`Vault contract not initialized for chain ${chainId}`);
+    }
+    return contract;
+  }
+
+  private getProvider(chainId: number): ethers.JsonRpcProvider {
+    const provider = this.providers.get(chainId);
+    if (!provider) {
+      throw new Error(`Provider not initialized for chain ${chainId}`);
+    }
+    return provider;
+  }
+
+  /**
+   * Get supported chain IDs for vault operations
+   */
+  getSupportedChainIds(): number[] {
+    return Array.from(this.vaultContracts.keys());
+  }
+
+  /**
+   * Get vault contract address for a specific chain
+   */
+  async getVaultContractAddress(chainId: number): Promise<string> {
+    const contract = this.vaultContracts.get(chainId);
+    if (!contract) {
+      throw new Error(`Vault contract not initialized for chain ${chainId}`);
+    }
+    return await contract.getAddress();
+  }
+
+  /**
+   * Check if chain is supported for vault operations
+   */
+  isChainSupported(chainId: number): boolean {
+    return this.vaultContracts.has(chainId);
   }
 
   /**
@@ -39,7 +97,7 @@ class VaultService {
     userAddress: string,
     tokenAddress: string,
     requiredAmount: string,
-    chainId: number = 1
+    chainId: number = SUPPORTED_CHAINS.OPTIMISM.id
   ): Promise<{ sufficient: boolean; currentBalance: string; required: string }> {
     try {
       logger.debug('Checking vault balance for swap', {
@@ -50,8 +108,11 @@ class VaultService {
       });
 
       try {
+        // Get chain-specific vault contract
+        const vaultContract = this.getVaultContract(chainId);
+        
         // Get user's vault balance for the token
-        const balance = await this.vaultContract.balances(userAddress, tokenAddress);
+        const balance = await vaultContract.balances(userAddress, tokenAddress);
         const balanceString = balance.toString();
 
         const sufficient = BigInt(balanceString) >= BigInt(requiredAmount);
@@ -71,11 +132,16 @@ class VaultService {
         };
 
       } catch (contractError: any) {
+        const contractAddress = chainId === SUPPORTED_CHAINS.ETHERLINK.id 
+          ? config.vaultContractAddressEtherlink 
+          : config.vaultContractAddress;
+        
         logger.warn('Vault contract call failed, using fallback behavior', {
           error: contractError.message,
           userAddress,
           tokenAddress,
-          vaultAddress: config.vaultContractAddress
+          chainId,
+          vaultAddress: contractAddress
         });
 
         // For development/testing: assume user has sufficient balance
@@ -96,31 +162,34 @@ class VaultService {
   }
 
   /**
-   * Update vault balance after successful swap
+   * Update vault balance
    */
-  async updateBalanceAfterSwap(
+  async updateBalance(
     userAddress: string,
     tokenAddress: string,
     amount: string,
-    swapType: 'FUSION_ORDER'
+    chainId: number = SUPPORTED_CHAINS.OPTIMISM.id
   ): Promise<{ txHash: string; success: boolean }> {
     try {
       logger.info('Updating vault balance after swap', {
         userAddress,
         tokenAddress,
         amount,
-        swapType
+        chainId
       });
 
       try {
+        // Get chain-specific vault contract
+        const vaultContract = this.getVaultContract(chainId);
+        
         // Check if token is whitelisted
-        const isWhitelisted = await this.vaultContract.isWhitelistedToken(tokenAddress);
+        const isWhitelisted = await vaultContract.isWhitelistedToken(tokenAddress);
         if (!isWhitelisted) {
-          throw new Error(`Token ${tokenAddress} is not whitelisted in vault`);
+          throw new Error(`Token ${tokenAddress} is not whitelisted in vault on chain ${chainId}`);
         }
 
         // Call updateBalance function (only owner can call this)
-        const tx = await this.vaultContract.updateBalance(tokenAddress, userAddress, amount);
+        const tx = await vaultContract.updateBalance(tokenAddress, userAddress, amount);
         const receipt = await tx.wait();
 
         logger.info('Vault balance updated successfully', {
@@ -130,14 +199,7 @@ class VaultService {
           txHash: receipt.hash
         });
 
-        // Store transaction record
-        await this.recordVaultTransaction({
-          token: tokenAddress,
-          user: userAddress,
-          amount,
-          type: 'FUSION_DEDUCT',
-          txHash: receipt.hash
-        });
+
 
         return {
           txHash: receipt.hash,
@@ -151,26 +213,9 @@ class VaultService {
           tokenAddress,
           amount
         });
-
-        // For development: simulate successful update
-        const mockTxHash = `0x${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
-        
-        logger.info('Using fallback: simulating successful vault update for development', {
-          mockTxHash
-        });
-
-        // Store mock transaction record
-        await this.recordVaultTransaction({
-          token: tokenAddress,
-          user: userAddress,
-          amount,
-          type: 'FUSION_DEDUCT',
-          txHash: mockTxHash
-        });
-
         return {
-          txHash: mockTxHash,
-          success: true
+          txHash: '',
+          success: false
         };
       }
 
@@ -185,19 +230,22 @@ class VaultService {
    */
   async getUserVaultBalances(
     userAddress: string,
-    tokenAddresses: string[]
+    tokenAddresses: string[],
+    chainId: number = SUPPORTED_CHAINS.OPTIMISM.id
   ): Promise<VaultBalance[]> {
     try {
       logger.debug('Getting user vault balances', {
         userAddress,
-        tokenCount: tokenAddresses.length
+        tokenCount: tokenAddresses.length,
+        chainId
       });
 
+      const vaultContract = this.getVaultContract(chainId);
       const balances: VaultBalance[] = [];
 
       for (const tokenAddress of tokenAddresses) {
         try {
-          const balance = await this.vaultContract.balances(userAddress, tokenAddress);
+          const balance = await vaultContract.balances(userAddress, tokenAddress);
           
           // Get token info (simplified - in production you'd fetch from token contract)
           const tokenInfo = this.getTokenInfo(tokenAddress);
@@ -226,12 +274,13 @@ class VaultService {
   /**
    * Check if token is whitelisted in vault
    */
-  async isTokenWhitelisted(tokenAddress: string): Promise<boolean> {
+  async isTokenWhitelisted(tokenAddress: string, chainId: number = SUPPORTED_CHAINS.OPTIMISM.id): Promise<boolean> {
     try {
-      const isWhitelisted = await this.vaultContract.isWhitelistedToken(tokenAddress);
+      const vaultContract = this.getVaultContract(chainId);
+      const isWhitelisted = await vaultContract.isWhitelistedToken(tokenAddress);
       return isWhitelisted;
     } catch (error) {
-      logger.error('Failed to check token whitelist status:', error);
+      logger.error(`Failed to check token whitelist status on chain ${chainId}:`, error);
       return false;
     }
   }
@@ -243,18 +292,20 @@ class VaultService {
     userAddress: string,
     fromTokenAddress: string,
     amount: string,
-    orderHash: string
+    fromChain: number,
+    chainId: number = SUPPORTED_CHAINS.OPTIMISM.id
   ): Promise<{ reserved: boolean; reservationId?: string }> {
     try {
       logger.info('Handling vault for Fusion order', {
         userAddress,
         fromTokenAddress,
         amount,
-        orderHash
+        fromChain,
+        chainId
       });
 
       // Check if user has sufficient balance
-      const balanceCheck = await this.checkSwapBalance(userAddress, fromTokenAddress, amount);
+      const balanceCheck = await this.checkSwapBalance(userAddress, fromTokenAddress, amount, chainId);
       
       if (!balanceCheck.sufficient) {
         logger.warn('Insufficient vault balance for Fusion order', {
@@ -266,28 +317,16 @@ class VaultService {
         return { reserved: false };
       }
 
-      // For Fusion orders, we don't immediately deduct but reserve the balance
-      // This would be handled by the smart contract or escrow system
-      const reservationId = `fusion_${orderHash}_${Date.now()}`;
-
-      // Store reservation record
-      await this.recordVaultTransaction({
-        token: fromTokenAddress,
-        user: userAddress,
-        amount,
-        type: 'DEPOSIT', // Using DEPOSIT type to track reservation
-        txHash: reservationId
-      });
+      // Fill the vault balance
+      await this.updateBalance(userAddress, fromTokenAddress, amount, chainId);
 
       logger.info('Vault balance reserved for Fusion order', {
         userAddress,
         amount,
-        reservationId
       });
 
       return {
         reserved: true,
-        reservationId
       };
 
     } catch (error) {
@@ -310,24 +349,6 @@ class VaultService {
     } catch (error) {
       logger.error('Failed to get vault transaction history:', error);
       throw new Error(`Failed to get transaction history: ${error}`);
-    }
-  }
-
-  /**
-   * Record vault transaction in database
-   */
-  private async recordVaultTransaction(transaction: VaultTransaction): Promise<void> {
-    try {
-      // Store vault transaction record
-      // In a full implementation, you'd have a VaultTransaction model in Prisma
-      logger.debug('Recording vault transaction', transaction);
-      
-      // For now, just log the transaction
-      // In production, you'd save to database:
-      // await prisma.vaultTransaction.create({ data: transaction });
-      
-    } catch (error) {
-      logger.error('Failed to record vault transaction:', error);
     }
   }
 
