@@ -36,6 +36,7 @@ function AutomationFlowInner() {
     nodeType: 'trigger' | 'condition' | 'action';
     nodeLabel: string;
     nodeId?: string;
+    existingConfig?: any;
   }>({
     isOpen: false,
     nodeType: 'trigger',
@@ -47,12 +48,14 @@ function AutomationFlowInner() {
     setEdgesFlow
   } = useAutomationStore();
 
-  const handleNodeConfigure = useCallback((nodeData: any, nodeType: 'trigger' | 'condition' | 'action') => {
-    console.log('Configure node:', { nodeData, nodeType, label: nodeData.label });
+  const handleNodeConfigure = useCallback((nodeData: any, nodeType: 'trigger' | 'condition' | 'action', nodeId: string) => {
+    console.log('Configure node:', { nodeData, nodeType, label: nodeData.label, nodeId, config: nodeData.config });
     setConfigModal({
       isOpen: true,
       nodeType,
       nodeLabel: nodeData.label,
+      nodeId,
+      existingConfig: nodeData.config,
     });
   }, []);
 
@@ -72,33 +75,74 @@ function AutomationFlowInner() {
   }, [setNodes, setEdges]);
 
   const handleConfigSave = useCallback((config: any) => {
-    // Here you would update the node with the new configuration
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.selected
-          ? { ...node, data: { ...node.data, config } }
-          : node
-      )
-    );
-   
-  }, []);
+    console.log('Saving config:', config, 'for nodeId:', configModal.nodeId);
+    
+    if (!configModal.nodeId) {
+      console.error('No nodeId found in configModal state');
+      return;
+    }
 
-  // Handle keyboard shortcuts
+    // Update the specific node with the new configuration
+    setNodes((nds) => {
+      const updatedNodes = nds.map((node) =>
+        node.id === configModal.nodeId
+          ? { 
+              ...node, 
+              data: { 
+                ...node.data, 
+                config,
+                status: 'configured',
+                description: `Configured ${node.data.label}`
+              }
+            }
+          : node
+      );
+      console.log('Updated nodes:', updatedNodes);
+      return updatedNodes;
+    });
+
+    // Close the modal
+    setConfigModal(prev => ({ ...prev, isOpen: false }));
+  }, [configModal.nodeId]);
+
+  // Handle keyboard shortcuts with modal and input field checks
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Delete' || event.key === 'Backspace') {
+      // Don't delete nodes if configuration modal is open
+      if (configModal.isOpen) {
+        return;
+      }
+
+      // Don't delete nodes if user is typing in an input field
+      const activeElement = document.activeElement;
+      const isTypingInInput = activeElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.tagName === 'SELECT' ||
+        (activeElement as HTMLElement).isContentEditable
+      );
+
+      if (isTypingInInput) {
+        return;
+      }
+
+      // Only delete on Delete key (not Backspace to be extra safe)
+      if (event.key === 'Delete') {
         const selectedNodes = nodes.filter(node => node.selected);
-        selectedNodes.forEach(node => {
-          if (node.id) {
-            handleNodeDelete(node.id);
-          }
-        });
+        if (selectedNodes.length > 0) {
+          event.preventDefault(); // Prevent any default behavior
+          selectedNodes.forEach(node => {
+            if (node.id) {
+              handleNodeDelete(node.id);
+            }
+          });
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [nodes, handleNodeDelete]);
+  }, [nodes, handleNodeDelete, configModal.isOpen]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -138,7 +182,7 @@ function AutomationFlowInner() {
 
       const nodeData = JSON.parse(type);
       const newNode: Node = {
-        id: `${nodes.length + 1}`,
+        id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: nodeData.type,
         position,
         selected: false,
@@ -151,7 +195,7 @@ function AutomationFlowInner() {
                 nodeData.data.label === 'Wallet Balance' ? 'WALLET_BALANCE' :
                 nodeData.data.label === 'Swap Tokens' ? 'FUSION_ORDER' : 
                 nodeData.data.label,
-          onConfigure: (data: any) => handleNodeConfigure(data, data.nodeType),
+          onConfigure: (data: any, nodeId: string) => handleNodeConfigure(data, data.nodeType, nodeId),
           onDelete: handleNodeDelete
         },
       };
@@ -204,6 +248,7 @@ function AutomationFlowInner() {
         nodeType={configModal.nodeType}
         nodeLabel={configModal.nodeLabel}
         onSave={handleConfigSave}
+        existingConfig={configModal.existingConfig}
       />
     </div>
   );
