@@ -15,19 +15,23 @@ const CHAIN_OPTIONS = [
   { value: 42793, label: 'Etherlink' },
 ];
 
-const TOKEN_ADDRESS_OPTIONS = [
-  {
-    value: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85',
-    label: 'USDC (Optimism)',
-    chain: 10,
-  },
-  {
-    value: '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9',
-    label: 'USDC (Etherlink)',
-    chain: 42793,
-  },
-  // Add more tokens as needed
-];
+// Network-specific token options
+const NETWORK_TOKENS = {
+  10: [ // Optimism
+    { value: 'ETH', label: 'Ethereum (ETH)', address: '0x0000000000000000000000000000000000000000' },
+    { value: 'USDC', label: 'USD Coin (USDC)', address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85' },
+  ],
+  42793: [ // Etherlink
+    { value: 'XTZ', label: 'Tezos (XTZ)', address: '0x0000000000000000000000000000000000000000' },
+    { value: 'USDC', label: 'USD Coin (USDC)', address: '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9' },
+  ],
+};
+
+
+// Helper function to get tokens for a specific network
+const getTokensForNetwork = (chainId: number) => {
+  return NETWORK_TOKENS[chainId as keyof typeof NETWORK_TOKENS] || [];
+};
 
 const OPERATOR_OPTIONS = [
   { value: 'gte', label: 'Greater than or equal to' },
@@ -49,13 +53,79 @@ const getDefaultConfig = (nodeType: 'trigger' | 'condition' | 'action', nodeLabe
   }
   if (nodeType === 'action' && (nodeLabel === 'Swap Tokens' || nodeLabel === 'Swap & Alert')) {
     return {
-      fromToken: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85',
-      toToken: '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9',
+      fromToken: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', // USDC Optimism
+      toToken: '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9', // USDC Etherlink
       amount: '10',
       fromChain: 10,
       toChain: 42793,
       receiver: '',
       deadline: 3600,
+    };
+  }
+  if (nodeType === 'action' && nodeLabel === 'Send/Transfer') {
+    return {
+      chainId: 10,
+      token: 'ETH',
+      amountType: 'percentage',
+      amount: '25',
+      recipient: '',
+    };
+  }
+  if (nodeType === 'trigger' && nodeLabel === 'Wallet Balance') {
+    return {
+      chainId: 10,
+      token: 'ETH',
+      condition: 'greater_than',
+      amount: '',
+      walletAddress: '',
+    };
+  }
+  if (nodeType === 'condition' && nodeLabel === 'Amount Limits') {
+    return {
+      chainId: 10,
+      token: 'ETH',
+      minAmount: '',
+      maxAmount: '',
+    };
+  }
+  if (nodeType === 'condition' && nodeLabel === 'Portfolio Percentage') {
+    return {
+      chainId: 10,
+      token: 'ETH',
+      condition: 'greater_than',
+      percentage: '',
+    };
+  }
+  if (nodeType === 'action' && nodeLabel === 'Stake/Unstake') {
+    return {
+      chainId: 10,
+      action: 'stake',
+      protocol: 'lido',
+      token: 'ETH',
+      amountType: 'percentage',
+      amount: '50',
+    };
+  }
+  if (nodeType === 'trigger' && nodeLabel === 'Gas Price') {
+    return {
+      chainId: 10,
+      condition: 'less_than',
+      gasLimit: '5',
+    };
+  }
+  if (nodeType === 'trigger' && nodeLabel === 'Time Schedule') {
+    return {
+      scheduleType: 'recurring',
+      time: '',
+      timezone: 'UTC',
+    };
+  }
+  if (nodeType === 'condition' && nodeLabel === 'Gas Fee Limit') {
+    return {
+      chainId: 10,
+      gasPrice: '20',
+      unit: 'gwei',
+      priority: 'standard',
     };
   }
   // Add more defaults for other node types/labels as needed
@@ -108,10 +178,9 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
               value={config.token || 'ETH'}
               onChange={e => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
             >
-              <option value="ETH">Ethereum (ETH)</option>
-              <option value="USDC">USD Coin (USDC)</option>
-              <option value="USDT">Tether (USDT)</option>
-              <option value="BTC">Bitcoin (BTC)</option>
+              {getTokensForNetwork(config.chainId || 10).map(token => (
+                <option key={token.value} value={token.value}>{token.label}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -148,11 +217,12 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
             <label className="block text-sm font-medium text-white mb-2">Network</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={config.network || 'optimism'}
-              onChange={(e) => setConfig((prev: any) => ({ ...prev, network: e.target.value }))}
+              value={config.chainId || 10}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, chainId: Number(e.target.value) }))}
             >
-              <option value="optimism">Optimism</option>
-              <option value="etherlink">Etherlink</option>
+              {CHAIN_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
 
@@ -228,27 +298,37 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
       return (
         <div className="space-y-4">
           <div>
+            <label className="block text-sm font-medium text-white mb-2">Network</label>
+            <select
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+              value={config.chainId || 10}
+              onChange={e => {
+                const newChainId = Number(e.target.value);
+                const availableTokens = getTokensForNetwork(newChainId);
+                setConfig((prev: any) => ({ 
+                  ...prev, 
+                  chainId: newChainId,
+                  // Reset token to first available if current token doesn't exist on new network
+                  token: availableTokens.find(t => t.value === prev.token) ? prev.token : availableTokens[0]?.value || 'ETH'
+                }))
+              }}
+            >
+              {CHAIN_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-white mb-2">Token</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               value={config.token || 'ETH'}
               onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
             >
-              <option value="ETH">Ethereum (ETH)</option>
-              <option value="USDC">USD Coin (USDC)</option>
-              <option value="USDT">Tether (USDT)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">Network</label>
-            <select 
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={config.chainId || 10}
-              onChange={(e) => setConfig((prev: any) => ({ ...prev, chainId: parseInt(e.target.value) }))}
-            >
-              <option value={10}>Optimism</option>
-              <option value={42793}>Etherlink</option>
+              {getTokensForNetwork(config.chainId || 10).map(token => (
+                <option key={token.value} value={token.value}>{token.label}</option>
+              ))}
             </select>
           </div>
 
@@ -297,6 +377,28 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
       return (
         <div className="space-y-4">
           <div>
+            <label className="block text-sm font-medium text-white mb-2">Network</label>
+            <select
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={config.chainId || 10}
+              onChange={e => {
+                const newChainId = Number(e.target.value);
+                const availableTokens = getTokensForNetwork(newChainId);
+                setConfig((prev: any) => ({ 
+                  ...prev, 
+                  chainId: newChainId,
+                  // Reset token to first available if current token doesn't exist on new network
+                  token: availableTokens.find(t => t.value === prev.token) ? prev.token : availableTokens[0]?.value || 'ETH'
+                }))
+              }}
+            >
+              {CHAIN_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-white mb-2">Minimum Amount</label>
             <div className="flex gap-2">
               <input
@@ -311,9 +413,9 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
                 value={config.token || 'ETH'}
                 onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
               >
-                <option value="ETH">ETH</option>
-                <option value="USDC">USDC</option>
-                <option value="XTZ">XTZ</option>
+                {getTokensForNetwork(config.chainId || 10).map(token => (
+                  <option key={token.value} value={token.value}>{token.value}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -333,9 +435,9 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
                 value={config.token || 'ETH'}
                 onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
               >
-                <option value="ETH">ETH</option>
-                <option value="USDC">USDC</option>
-                <option value="XTZ">XTZ</option>
+                {getTokensForNetwork(config.chainId || 10).map(token => (
+                  <option key={token.value} value={token.value}>{token.value}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -413,16 +515,37 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
       return (
         <div className="space-y-4">
           <div>
+            <label className="block text-sm font-medium text-white mb-2">Network</label>
+            <select
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={config.chainId || 10}
+              onChange={e => {
+                const newChainId = Number(e.target.value);
+                const availableTokens = getTokensForNetwork(newChainId);
+                setConfig((prev: any) => ({ 
+                  ...prev, 
+                  chainId: newChainId,
+                  // Reset token to first available if current token doesn't exist on new network
+                  token: availableTokens.find(t => t.value === prev.token) ? prev.token : availableTokens[0]?.value || 'ETH'
+                }))
+              }}
+            >
+              {CHAIN_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
             <label className="block text-sm font-medium text-white mb-2">Token</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={config.token || 'ETH'}
               onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
             >
-              <option value="ETH">Ethereum (ETH)</option>
-              <option value="USDC">USD Coin (USDC)</option>
-              <option value="USDT">Tether (USDT)</option>
-              <option value="BTC">Bitcoin (BTC)</option>
+              {getTokensForNetwork(config.chainId || 10).map(token => (
+                <option key={token.value} value={token.value}>{token.label}</option>
+              ))}
             </select>
           </div>
 
@@ -530,11 +653,12 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
             <label className="block text-sm font-medium text-white mb-2">Network</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={config.network || 'optimism'}
-              onChange={(e) => setConfig((prev: any) => ({ ...prev, network: e.target.value }))}
+              value={config.chainId || 10}
+              onChange={(e) => setConfig((prev: any) => ({ ...prev, chainId: Number(e.target.value) }))}
             >
-              <option value="optimism">Optimism</option>
-              <option value="etherlink">Etherlink</option>
+              {CHAIN_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
 
@@ -719,21 +843,58 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
       return (
         <div className="space-y-4">
           <div>
+            <label className="block text-sm font-medium text-white mb-2">From Chain</label>
+            <select
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={config.fromChain || 10}
+              onChange={e => {
+                const newChainId = Number(e.target.value);
+                const availableTokens = getTokensForNetwork(newChainId);
+                setConfig((prev: any) => ({ 
+                  ...prev, 
+                  fromChain: newChainId,
+                  // Reset fromToken to first available token address if current token doesn't exist on new network
+                  fromToken: availableTokens.find(t => t.address === prev.fromToken) ? prev.fromToken : availableTokens[0]?.address || ''
+                }))
+              }}
+            >
+              {CHAIN_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-white mb-2">From Token</label>
             <select
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.fromToken || ''}
-              onChange={e => {
-                const selected = TOKEN_ADDRESS_OPTIONS.find(opt => opt.value === e.target.value);
-                setConfig((prev: any) => ({
-                  ...prev,
-                  fromToken: e.target.value,
-                  fromChain: selected ? selected.chain : prev.fromChain,
-                }));
-              }}
+              onChange={e => setConfig((prev: any) => ({ ...prev, fromToken: e.target.value }))}
             >
               <option value="">Select Token</option>
-              {TOKEN_ADDRESS_OPTIONS.map(opt => (
+              {getTokensForNetwork(config.fromChain || 10).map(token => (
+                <option key={token.address} value={token.address}>{token.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">To Chain</label>
+            <select
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={config.toChain || 42793}
+              onChange={e => {
+                const newChainId = Number(e.target.value);
+                const availableTokens = getTokensForNetwork(newChainId);
+                setConfig((prev: any) => ({ 
+                  ...prev, 
+                  toChain: newChainId,
+                  // Reset toToken to first available token address if current token doesn't exist on new network
+                  toToken: availableTokens.find(t => t.address === prev.toToken) ? prev.toToken : availableTokens[0]?.address || ''
+                }))
+              }}
+            >
+              {CHAIN_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
@@ -744,18 +905,11 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
             <select
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.toToken || ''}
-              onChange={e => {
-                const selected = TOKEN_ADDRESS_OPTIONS.find(opt => opt.value === e.target.value);
-                setConfig((prev: any) => ({
-                  ...prev,
-                  toToken: e.target.value,
-                  toChain: selected ? selected.chain : prev.toChain,
-                }));
-              }}
+              onChange={e => setConfig((prev: any) => ({ ...prev, toToken: e.target.value }))}
             >
               <option value="">Select Token</option>
-              {TOKEN_ADDRESS_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              {getTokensForNetwork(config.toChain || 42793).map(token => (
+                <option key={token.address} value={token.address}>{token.label}</option>
               ))}
             </select>
           </div>
@@ -771,33 +925,6 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">From Chain</label>
-            <select
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              value={config.fromChain || ''}
-              onChange={e => setConfig((prev: any) => ({ ...prev, fromChain: Number(e.target.value) }))}
-            >
-              <option value="">Select Chain</option>
-              {CHAIN_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">To Chain</label>
-            <select
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              value={config.toChain || ''}
-              onChange={e => setConfig((prev: any) => ({ ...prev, toChain: Number(e.target.value) }))}
-            >
-              <option value="">Select Chain</option>
-              {CHAIN_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">Receiver Address</label>
@@ -829,16 +956,37 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
       return (
         <div className="space-y-4">
           <div>
+            <label className="block text-sm font-medium text-white mb-2">Network</label>
+            <select
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={config.chainId || 10}
+              onChange={e => {
+                const newChainId = Number(e.target.value);
+                const availableTokens = getTokensForNetwork(newChainId);
+                setConfig((prev: any) => ({ 
+                  ...prev, 
+                  chainId: newChainId,
+                  // Reset token to first available if current token doesn't exist on new network
+                  token: availableTokens.find(t => t.value === prev.token) ? prev.token : availableTokens[0]?.value || 'ETH'
+                }))
+              }}
+            >
+              {CHAIN_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
             <label className="block text-sm font-medium text-white mb-2">Token</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.token || 'ETH'}
               onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
             >
-              <option value="ETH">Ethereum (ETH)</option>
-              <option value="USDC">USD Coin (USDC)</option>
-              <option value="USDT">Tether (USDT)</option>
-              <option value="BTC">Bitcoin (BTC)</option>
+              {getTokensForNetwork(config.chainId || 10).map(token => (
+                <option key={token.value} value={token.value}>{token.label}</option>
+              ))}
             </select>
           </div>
 
@@ -884,17 +1032,6 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">Network</label>
-            <select 
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              value={config.network || 'optimism'}
-              onChange={(e) => setConfig((prev: any) => ({ ...prev, network: e.target.value }))}
-            >
-              <option value="optimism">Optimism</option>
-              <option value="etherlink">Etherlink</option>
-            </select>
-          </div>
         </div>
       );
     }
@@ -931,16 +1068,37 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, 
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-white mb-2">Network</label>
+            <select
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={config.chainId || 10}
+              onChange={e => {
+                const newChainId = Number(e.target.value);
+                const availableTokens = getTokensForNetwork(newChainId);
+                setConfig((prev: any) => ({ 
+                  ...prev, 
+                  chainId: newChainId,
+                  // Reset token to first available if current token doesn't exist on new network
+                  token: availableTokens.find(t => t.value === prev.token) ? prev.token : availableTokens[0]?.value || 'ETH'
+                }))
+              }}
+            >
+              {CHAIN_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-white mb-2">Token</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               value={config.token || 'ETH'}
               onChange={(e) => setConfig((prev: any) => ({ ...prev, token: e.target.value }))}
             >
-              <option value="ETH">Ethereum (ETH)</option>
-              <option value="USDC">USD Coin (USDC)</option>
-              <option value="USDT">Tether (USDT)</option>
-              <option value="DAI">Dai (DAI)</option>
+              {getTokensForNetwork(config.chainId || 10).map(token => (
+                <option key={token.value} value={token.value}>{token.label}</option>
+              ))}
             </select>
           </div>
 
