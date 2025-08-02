@@ -44,27 +44,71 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
   const remaining = Math.max(0, costBreakdown.total - userDepositBalance);
   const additionalAmountValue = parseFloat(additionalAmount) || 0;
   const totalDepositAmount = remaining + additionalAmountValue;
-  const hasInsufficientUSDC = totalDepositAmount > usdcBalance;
+  const hasInsufficientUSDC = totalDepositAmount > 0 && totalDepositAmount > usdcBalance;
   const canDeposit = totalDepositAmount > 0 && !hasInsufficientUSDC && !isProcessing;
 
-  const handleDeposit = async () => {
-    if (!canDeposit) return;
+  // Debug logging to help identify the issue
+  console.log('Debug values:', {
+    costBreakdownTotal: costBreakdown.total,
+    userDepositBalance,
+    remaining,
+    additionalAmountValue,
+    totalDepositAmount,
+    usdcBalance,
+    hasInsufficientUSDC,
+    canDeposit
+  });
 
+  const handleDeposit = async () => {
+    console.log('handleDeposit called, canDeposit:', canDeposit);
+    
+    if (!canDeposit) {
+      console.log('Cannot deposit - canDeposit is false');
+      return;
+    }
+
+    console.log('Setting isProcessing to true');
     setIsProcessing(true);
+    
     try {
+      console.log('Checking if approval is needed for amount:', totalDepositAmount);
       // Check if approval is needed
       if (needsApproval(totalDepositAmount)) {
+        console.log('Approval needed, calling approveUSDCSpending');
         await approveUSDCSpending(totalDepositAmount);
+        console.log('Approval transaction submitted');
         // Wait for approval success before depositing
       } else {
+        console.log('No approval needed, calling deposit directly');
         await deposit(totalDepositAmount);
+        console.log('Deposit transaction submitted');
       }
     } catch (error) {
       console.error('Deposit failed:', error);
-      toast.error('Deposit failed. Please try again.', {
-        position: 'bottom-center',
-        autoClose: 5000,
-      });
+      
+      // Check for MetaMask circuit breaker error
+      const errorMessage = (error as any)?.message || '';
+      const errorData = (error as any)?.data;
+      const isCircuitBreakerError = errorMessage.includes('circuit breaker') || 
+                                   errorData?.cause?.isBrokenCircuitError;
+      
+      if (isCircuitBreakerError) {
+        toast.error('MetaMask network issue detected. Please try again in a moment.', {
+          position: 'bottom-center',
+          autoClose: 7000,
+        });
+      } else if (errorMessage.includes('User rejected')) {
+        toast.error('Transaction cancelled by user.', {
+          position: 'bottom-center',
+          autoClose: 3000,
+        });
+      } else {
+        toast.error('Deposit failed. Please try again.', {
+          position: 'bottom-center',
+          autoClose: 5000,
+        });
+      }
+      
       setIsProcessing(false);
     }
   };
@@ -72,14 +116,40 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
   // Handle approval success -> proceed to deposit
   useEffect(() => {
     if (isApproveSuccess && isProcessing) {
-      deposit(totalDepositAmount).catch((error) => {
-        console.error('Deposit after approval failed:', error);
-        toast.error('Deposit failed. Please try again.', {
-          position: 'bottom-center',
-          autoClose: 5000,
-        });
-        setIsProcessing(false);
-      });
+      const handleDepositAfterApproval = async () => {
+        try {
+          await deposit(totalDepositAmount);
+        } catch (error) {
+          console.error('Deposit after approval failed:', error);
+          
+          // Check for MetaMask circuit breaker error
+          const errorMessage = (error as any)?.message || '';
+          const errorData = (error as any)?.data;
+          const isCircuitBreakerError = errorMessage.includes('circuit breaker') || 
+                                       errorData?.cause?.isBrokenCircuitError;
+          
+          if (isCircuitBreakerError) {
+            toast.error('MetaMask network issue detected. Please try again in a moment.', {
+              position: 'bottom-center',
+              autoClose: 7000,
+            });
+          } else if (errorMessage.includes('User rejected')) {
+            toast.error('Transaction cancelled by user.', {
+              position: 'bottom-center',
+              autoClose: 3000,
+            });
+          } else {
+            toast.error('Deposit failed. Please try again.', {
+              position: 'bottom-center',
+              autoClose: 5000,
+            });
+          }
+          
+          setIsProcessing(false);
+        }
+      };
+      
+      handleDepositAfterApproval();
     }
   }, [isApproveSuccess, isProcessing, deposit, totalDepositAmount]);
 
@@ -202,17 +272,19 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
 
         {activeTab === 'requirements' && (
           <>
-            {/* Cost Breakdown */}
-            <div className="px-4 pb-4">
-              <CostBreakdown
-                breakdown={costBreakdown}
-                userBalance={userDepositBalance}
-                isLoading={false}
-              />
-            </div>
-            
-            {/* Deposit Section */}
-            {depositStatus === 'insufficient' && (
+            {hasNodes ? (
+              <>
+                {/* Cost Breakdown */}
+                <div className="px-4 pb-4">
+                  <CostBreakdown
+                    breakdown={costBreakdown}
+                    userBalance={userDepositBalance}
+                    isLoading={false}
+                  />
+                </div>
+                
+                {/* Deposit Section */}
+                {depositStatus === 'insufficient' && (
               <div className="px-4 pb-4">
                 <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
                   <div className="flex items-center gap-2 mb-4">
@@ -343,38 +415,57 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
               </div>
             )}
             
-            {/* Available Balances */}
-            {userDepositBalance > 0 && (
-              <div className="px-4 pb-4">
-                <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
-                  <div className="flex items-center gap-2 mb-4">
-                    <DollarSign className="w-4 h-4 text-blue-500" />
-                    <span className="text-white font-medium">Your Deposit Balance</span>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold">U</div>
-                        <span className="text-white text-sm">USDC</span>
+                {/* Available Balances */}
+                {userDepositBalance > 0 && (
+                  <div className="px-4 pb-4">
+                    <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
+                      <div className="flex items-center gap-2 mb-4">
+                        <DollarSign className="w-4 h-4 text-blue-500" />
+                        <span className="text-white font-medium">Your Deposit Balance</span>
                       </div>
-                      <div className="text-right">
-                        <div className="text-white text-sm">{formatCost(userDepositBalance)}</div>
-                        <div className={`text-xs ${
-                          depositStatus === 'sufficient' ? 'text-green-500' : 'text-yellow-500'
-                        }`}>
-                          {depositStatus === 'sufficient' ? '✓ Sufficient' : '⚠ Need more'}
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold">U</div>
+                            <span className="text-white text-sm">USDC</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-white text-sm">{formatCost(userDepositBalance)}</div>
+                            <div className={`text-xs ${
+                              depositStatus === 'sufficient' ? 'text-green-500' : 'text-yellow-500'
+                            }`}>
+                              {depositStatus === 'sufficient' ? '✓ Sufficient' : '⚠ Need more'}
+                            </div>
+                          </div>
                         </div>
                       </div>
+
+                      <button
+                        onClick={onWithdraw}
+                        className="w-full mt-4 bg-neutral-700 hover:bg-neutral-600 text-white py-2 rounded-lg transition-colors text-sm cursor-pointer"
+                      >
+                        Withdraw Balance
+                      </button>
                     </div>
                   </div>
-
-                  <button
-                    onClick={onWithdraw}
-                    className="w-full mt-4 bg-neutral-700 hover:bg-neutral-600 text-white py-2 rounded-lg transition-colors text-sm cursor-pointer"
-                  >
-                    Withdraw Balance
-                  </button>
+                )}
+              </>
+            ) : (
+              <div className="px-4 pb-4">
+                <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 text-center">
+                  <div className="mb-4">
+                    <div className="w-16 h-16 bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Plus className="w-8 h-8 text-neutral-400" />
+                    </div>
+                  </div>
+                  <h3 className="text-white font-medium mb-2">No Nodes Selected</h3>
+                  <p className="text-neutral-400 text-sm mb-4">
+                    Add trigger and action nodes from the left sidebar to see cost breakdown and deposit requirements.
+                  </p>
+                  <div className="text-xs text-neutral-500">
+                    Start by dragging a trigger node to the canvas
+                  </div>
                 </div>
               </div>
             )}
