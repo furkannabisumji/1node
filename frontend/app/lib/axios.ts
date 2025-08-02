@@ -10,12 +10,34 @@ const axiosInstance = axios.create({
   }, // if using cookies/auth sessions
 })
 
+let isRefreshing = false;
+
+
 // Optional: Interceptors for auth, logging, etc.
 axiosInstance.interceptors.response.use(
   res => res,
-  err => {
-    console.error('Axios Error:', err)
-    return Promise.reject(err)
+  async (err) => {
+    const originalRequest = err.config;
+
+    if (err.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+
+        try {
+          await axiosInstance.post('/auth/refresh-token');
+          isRefreshing = false;
+          return axiosInstance(originalRequest); // retry the original request
+        } catch (refreshError) {
+          isRefreshing = false;
+          // optionally: redirect to login or disconnect wallet
+          console.error('Refresh token failed.');
+        }
+      }
+    }
+
+    return Promise.reject(err);
   }
 )
 

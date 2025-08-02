@@ -1,7 +1,7 @@
 import type { Route } from "./+types/onboarding";
 import { useEffect, useState } from "react";
 import { redirect, useNavigate } from "react-router";
-import { User, Globe, Bell, Wallet, Check } from "lucide-react";
+import { User, Globe, Bell, Wallet, Check, LogIn } from "lucide-react";
 import { ProgressBar } from "../components/onboarding/ProgressBar";
 import { FormCard } from "../components/onboarding/FormCard";
 import { NavigationButtons } from "../components/onboarding/NavigationButtons";
@@ -13,17 +13,29 @@ import { useAccount, useConnect, useSignMessage } from "wagmi";
 import { useAuth } from "~/auth/AuthProvider";
 import axiosInstance from "~/lib/axios";
 import axios from "axios";
-
+import { Bounce, toast } from "react-toastify";
 
 
 // --- New: ConnectWalletStep component ---
-function ConnectWalletStep({ onConnect }: { onConnect: () => void }) {
-  const { isConnected } = useAccount()
+function ConnectWalletStep({
+  onConnect,
+  onAlreadyRegisteredSignIn,
+  showAlreadyRegistered,
+  registering,
+}: {
+  onConnect: () => void;
+  onAlreadyRegisteredSignIn: () => void;
+  showAlreadyRegistered?: boolean;
+  registering?: boolean;
+}) {
+
+  const { isConnected } = useAccount();
+
   useEffect(() => {
     if (isConnected) {
-      onConnect()
+      onConnect();
     }
-  }, [isConnected])
+  }, [isConnected]);
 
   return (
     <FormCard icon={<Wallet size={30} />} title="Connect Your Wallet">
@@ -38,7 +50,7 @@ function ConnectWalletStep({ onConnect }: { onConnect: () => void }) {
                 <button
                   className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${isConnected
                     ? "bg-green-600 text-white cursor-default"
-                    : "bg-neutral-800 hover:bg-neutral-700 text-white"
+                    : "bg-neutral-800 hover:bg-neutral-700 text-white cursor-pointer"
                     }`}
                   onClick={show}
                   disabled={isConnected}
@@ -46,7 +58,6 @@ function ConnectWalletStep({ onConnect }: { onConnect: () => void }) {
                   <Wallet className="w-5 h-5" />
                   {isConnected ? "Wallet Connected" : "Connect Wallet"}
                   {isConnected && <Check className="w-5 h-5 text-green-300" />}
-
                 </button>
                 {isConnected && (
                   <div className="text-green-500 text-sm flex items-center gap-1">
@@ -76,17 +87,18 @@ export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [registering, setRegistering] = useState(false);
   const [userRegisterError, setUserRegisterError] = useState('');
-
+  const [showAlreadyRegistered, setShowAlreadyRegistered] = useState(false);
+  
   // Hooks
-  const { isConnected, address } = useAccount()
-  const { signMessageAsync } = useSignMessage()
-  const { user, setUser } = useAuth()
+  const { isConnected, address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const { user, setUser } = useAuth();
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard')
+      navigate('/dashboard');
     }
-  }, [user])
+  }, [user]);
 
   // New: Wallet connection state
   const [walletConnected, setWalletConnected] = useState(false);
@@ -115,7 +127,6 @@ export default function Onboarding() {
     setStep3Data(prev => ({ ...prev, [field]: value }));
   };
 
-
   const handleConnectWallet = () => {
     setWalletConnected(true);
   };
@@ -133,7 +144,7 @@ export default function Onboarding() {
       setCurrentStep(currentStep + 1);
     } else {
       // Submit form and redirect to dashboard
-      await signIn()
+      await signIn();
       // TODO: Send data to backend
       // Redirect to dashboard after successful onboarding
       // navigate('/dashboard');
@@ -156,16 +167,57 @@ export default function Onboarding() {
     return false;
   };
 
-  const signIn = async () => {
-    const message = `Sign this message to authenticate. Timestamp: ${Date.now()}`
+  // New: Only sign in (skip registration) for already registered users
+  const signInOnly = async () => {
+    if (!walletConnected) {
+      toast.error('Please connect your wallet first.', {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        transition: Bounce,
+// force red background
+      });
+      return;
+    }
+    const message = `Sign this message to authenticate. Timestamp: ${Date.now()}`;
     try {
-      setRegistering(true)
-      const signature = await signMessageAsync({ message })
+      setRegistering(true);
+      const signature = await signMessageAsync({ message });
+
+      const { data: AuthenticationSuccess } = await axiosInstance.post(
+        '/auth/connect-wallet',
+        {
+          walletAddress: address,
+          signature,
+          message,
+        }
+      );
+      if (AuthenticationSuccess) {
+        setRegistering(false);
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setRegistering(false);
+      if (axios.isAxiosError(err)) {
+        setUserRegisterError(err.response?.data?.error);
+      } else {
+        setUserRegisterError('Unexpected error during sign in.');
+      }
+    }
+  };
+
+  const signIn = async () => {
+    const message = `Sign this message to authenticate. Timestamp: ${Date.now()}`;
+    try {
+      setRegistering(true);
+      const signature = await signMessageAsync({ message });
 
       // First, register the user (with email, username, etc.), then connect-wallet for authentication
-      // 1. Register user
-      // 1. Register user
-
       const { data: registerRes, status } = await axiosInstance.post('/auth/register', {
         walletAddress: address,
         email: step1Data.email,
@@ -177,15 +229,18 @@ export default function Onboarding() {
         message: message,
       });
 
+      // If user already exists (409), show Already registered? Sign in button
+      if (status === 409) {
+        setShowAlreadyRegistered(true);
+        setRegistering(false);
+        setUserRegisterError('You are already registered. Please sign in.');
+        return;
+      }
 
-
-      // If user already exists (409), continue silently
       if (status !== 201 && status !== 409) {
         // status 201 is "Created" (successful registration)
         throw new Error(registerRes?.error || 'Registration failed');
       }
-
-
 
       const { data: AuthenticationSuccess } = await axiosInstance.post(
         '/auth/connect-wallet',
@@ -197,27 +252,35 @@ export default function Onboarding() {
       );
       if (AuthenticationSuccess) {
         setUser(registerRes.user);
-        setRegistering(false)
+        setRegistering(false);
         navigate('/dashboard');
       }
-
-
     } catch (err) {
-      setRegistering(false)
+      setRegistering(false);
       if (axios.isAxiosError(err)) {
-        console.error('Wallet connect failed:', err.response?.data?.error);
-        setUserRegisterError(err.response?.data?.error)
+        // If error is user already exists, show Already registered? Sign in button
+        if (err.response?.status === 409) {
+          setShowAlreadyRegistered(true);
+          setUserRegisterError('You are already registered. Please sign in.');
+        } else {
+          setUserRegisterError(err.response?.data?.error);
+        }
       } else {
-        console.error('Unexpected error:', err);
+        setUserRegisterError('Unexpected error during registration.');
       }
     }
-  }
+  };
 
   const getStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <ConnectWalletStep onConnect={handleConnectWallet} />
+          <ConnectWalletStep
+            onConnect={handleConnectWallet}
+            onAlreadyRegisteredSignIn={signInOnly}
+            showAlreadyRegistered={showAlreadyRegistered}
+            registering={registering}
+          />
         );
       case 2:
         return (
@@ -270,6 +333,20 @@ export default function Onboarding() {
         {/* Dynamic Form Content */}
         {getStepContent()}
 
+        {/* Already registered? Sign in button */}
+
+        <div className="flex flex-row items-center gap-2 mt-4 justify-center p-6">
+          <span className="text-neutral-500 text-sm">Already registered?</span>
+          <button
+            className="flex items-center gap-2 px-4 py-2 text-sm cursor-pointer rounded-md bg-neutral-800 hover:bg-neutral-900 text-white font-medium transition-colors disabled:opacity-60"
+            onClick={signInOnly}
+            disabled={registering}
+            type="button"
+          >
+            <LogIn className="w-4 h-4" />
+            Sign in
+          </button>
+        </div>
         {/* Navigation */}
         <NavigationButtons
           onPrevious={handlePrevious}

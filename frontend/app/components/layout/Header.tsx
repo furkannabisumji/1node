@@ -45,11 +45,9 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
       validateStatus: () => true, // disables automatic throwing for non-2xx
     }).then((res) => {
       setUser(res.data.user)
-      if (res.status === 401) {
-        navigate('/onboarding')
-      }
+
     }).catch((err) => {
-      navigate('/onboarding')
+      console.log("Auth Error is ", err)
     })
   }, [])
 
@@ -115,16 +113,16 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
         </button>
 
         {/* Notifications */}
-        <button className="p-2 rounded-lg hover:bg-neutral-800 transition-colors relative">
+        {/* <button className="p-2 rounded-lg hover:bg-neutral-800 transition-colors relative">
           <Bell className="h-5 w-5 text-neutral-300" />
-          {/* Notification badge */}
+
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+        </button> */}
 
         {/* Wallet Connection Button */}
         <div className="relative">
           <button
-            className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-3 py-2 rounded-lg transition-colors border border-neutral-600"
+            className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-3 cursor-pointer py-2 rounded-lg transition-colors border border-neutral-600"
             onClick={() => setShowWalletDropdown((prev) => !prev)}
           >
             {user && (
@@ -133,9 +131,9 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
             <ChevronDown className="h-4 w-4 text-neutral-400" />
           </button>
           {showWalletDropdown && (
-            <div className="absolute right-0 mt-2 w-40 bg-neutral-900 border border-neutral-700 rounded-lg shadow-lg z-50">
+            <div className="absolute right-0 mt-2 w-40 bg-neutral-900 border cursor-pointer border-neutral-700 rounded-lg shadow-lg z-50">
               <button
-                className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-neutral-800 rounded-t-lg"
+                className="w-full cursor-pointer text-left px-4 py-2 text-sm text-red-500 cursor-pointerhover:bg-neutral-800 rounded-t-lg"
                 onClick={handleLogout}
               >
                 Logout

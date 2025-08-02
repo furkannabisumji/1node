@@ -1,11 +1,12 @@
 import { useCallback, useState, useEffect } from 'react';
 import {
   ReactFlow,
-  Controls,
+  ReactFlowProvider,
   Background,
   addEdge,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   type Connection,
   type Edge,
   type Node,
@@ -24,14 +25,12 @@ const nodeTypes = {
   condition: ConditionNode,
 };
 
-const createInitialNodes = (
-  handleConfigure: (nodeData: any, nodeType: 'trigger' | 'condition' | 'action') => void,
-  handleDelete: (nodeId: string) => void
-): Node[] => [];
+const createInitialNodes = (): Node[] => [];
 
 const initialEdges: Edge[] = [];
 
-export function AutomationFlow() {
+function AutomationFlowInner() {
+  const { screenToFlowPosition } = useReactFlow();
   const [configModal, setConfigModal] = useState<{
     isOpen: boolean;
     nodeType: 'trigger' | 'condition' | 'action';
@@ -58,7 +57,7 @@ export function AutomationFlow() {
   }, []);
 
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(createInitialNodes(handleNodeConfigure, () => { }));
+  const [nodes, setNodes, onNodesChange] = useNodesState(createInitialNodes());
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   useEffect(() => {
@@ -126,17 +125,16 @@ export function AutomationFlow() {
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      const reactFlowBounds = event.currentTarget.getBoundingClientRect();
       const type = event.dataTransfer.getData('application/reactflow');
 
       if (typeof type === 'undefined' || !type) {
         return;
       }
 
-      const position = {
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      };
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
 
       const nodeData = JSON.parse(type);
       const newNode: Node = {
@@ -149,7 +147,10 @@ export function AutomationFlow() {
           description: `Configure ${nodeData.data.label}`,
           status: 'unconfigured',
           nodeType: nodeData.type as 'trigger' | 'condition' | 'action',
-          type: nodeData.data.label === "Price Change" ? 'PRICE_THRESHOLD' : nodeData.data.label === 'Swap Tokens' && 'FUSION_ORDER',
+          type: nodeData.data.label === "Price Change" ? 'PRICE_THRESHOLD' : 
+                nodeData.data.label === 'Wallet Balance' ? 'WALLET_BALANCE' :
+                nodeData.data.label === 'Swap Tokens' ? 'FUSION_ORDER' : 
+                nodeData.data.label,
           onConfigure: (data: any) => handleNodeConfigure(data, data.nodeType),
           onDelete: handleNodeDelete
         },
@@ -157,7 +158,7 @@ export function AutomationFlow() {
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [nodes, setNodes, handleNodeConfigure, handleNodeDelete]
+    [nodes, setNodes, handleNodeConfigure, handleNodeDelete, screenToFlowPosition]
   );
 
   return (
@@ -180,7 +181,7 @@ export function AutomationFlow() {
         onConnect={onConnect}
         onDrop={onDrop}
         onDragOver={onDragOver}
-        nodeTypes={nodeTypes}
+        nodeTypes={nodeTypes as any}
         fitView
         nodesConnectable={true}
         nodesDraggable={true}
@@ -205,5 +206,13 @@ export function AutomationFlow() {
         onSave={handleConfigSave}
       />
     </div>
+  );
+}
+
+export function AutomationFlow() {
+  return (
+    <ReactFlowProvider>
+      <AutomationFlowInner />
+    </ReactFlowProvider>
   );
 }

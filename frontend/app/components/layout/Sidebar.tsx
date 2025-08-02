@@ -1,13 +1,19 @@
-import { 
-  LayoutDashboard, 
-  Zap, 
+
+import axios from 'axios';
+import {
+  LayoutDashboard,
+  Zap,
   Plus,
   X,
   Settings,
   HelpCircle,
   LogOut
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
+import { useDisconnect } from 'wagmi';
+import { useAuth } from '~/auth/AuthProvider';
+import axiosInstance from '~/lib/axios';
+
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,18 +33,38 @@ const navigation: NavItem[] = [
 ];
 
 const bottomNavigation: NavItem[] = [
-  { name: 'Settings', href: '/settings', icon: Settings },
-  { name: 'Help', href: '/help', icon: HelpCircle },
+  { name: 'Settings', href: '/', icon: Settings },
+  { name: 'Help', href: '/', icon: HelpCircle },
   { name: 'Sign Out', href: '/logout', icon: LogOut },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
 
+  const navigate = useNavigate();
+  const { disconnect } = useDisconnect();
+  const { setUser } = useAuth();
+  const handleLogout = async () => {
+    try {
+
+      await axiosInstance.post('/auth/logout')
+      disconnect()
+      navigate('/')
+      setUser(null)
+
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        console.error('Wallet connect failed:', err.response?.data?.error);
+
+      } else {
+        console.error('Unexpected error:', err);
+      }
+    }
+  }
   return (
     <>
       {/* Overlay */}
-      <div 
+      <div
         className={`
           fixed inset-0 z-40 bg-black/50 backdrop-blur-sm
           transition-opacity duration-300 ease-in-out
@@ -46,9 +72,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         `}
         onClick={onClose}
       />
-      
+
       {/* Sidebar */}
-      <div 
+      <div
         className={`
           fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-neutral-800
           transform transition-transform duration-300 ease-out
@@ -106,8 +132,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   className={`
                     flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium 
                     transition-all duration-200 ease-in-out hover:transform hover:translate-x-1
-                    ${isActive 
-                      ? 'text-green-500 bg-green-500/10' 
+                    ${isActive
+                      ? 'text-green-500 bg-green-500/10'
                       : 'text-neutral-300 hover:bg-neutral-700 hover:text-white'
                     }
                   `}
@@ -125,17 +151,31 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Bottom Navigation */}
           <div className="border-t border-neutral-700 p-4 space-y-1">
             {bottomNavigation.map((item, index) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-300 hover:bg-neutral-700 hover:text-white transition-all duration-200 ease-in-out hover:transform hover:translate-x-1"
-                style={{
-                  transitionDelay: isOpen ? `${(navigation.length + index) * 50}ms` : '0ms'
-                }}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.name}
-              </Link>
+              item.name === 'Sign Out' ? (
+                <button
+                  key={item.name}
+                  className="flex cursor-pointer items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-300 hover:bg-neutral-700 hover:text-white transition-all duration-200 ease-in-out hover:transform hover:translate-x-1 w-full text-left"
+                  onClick={handleLogout}
+                  style={{
+                    transitionDelay: isOpen ? `${(navigation.length + index) * 50}ms` : '0ms'
+                  }}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.name}
+                </button>
+              ) : (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-300 hover:bg-neutral-700 hover:text-white transition-all duration-200 ease-in-out hover:transform hover:translate-x-1"
+                  style={{
+                    transitionDelay: isOpen ? `${(navigation.length + index) * 50}ms` : '0ms'
+                  }}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.name}
+                </Link>
+              )
             ))}
           </div>
         </div>

@@ -1,108 +1,40 @@
+import { useState, useEffect } from 'react';
 import { AppLayout } from '~/components/layout/AppLayout';
 import { AutomationCard } from '~/components/automations/AutomationCard';
-import { NotificationBar } from '~/components/automations/NotificationBar';
-import {Bot, Plus} from 'lucide-react';
+import {Plus} from 'lucide-react';
 import {Link} from "react-router";
+import axiosInstance from '~/lib/axios';
+import type { Route } from "./+types/automations";
 
-// Mock automation data
-const automations = [
-  {
-    id: 1,
-    name: 'ETH Stop Loss Protection',
-    status: 'active',
-    network: 'Ethereum',
-    trigger: 'ETH price drops 10%',
-    action: 'Swap 50% ETH → USDC',
-    deposited: 5000,
-    earned: 125.5
-  },
-  {
-    id: 2,
-    name: 'ETH Stop Loss Protection',
-    status: 'active',
-    network: 'Ethereum',
-    trigger: 'ETH price drops 10%',
-    action: 'Swap 50% ETH → USDC',
-    deposited: 5000,
-    earned: 125.5
-  },
-  {
-    id: 3,
-    name: 'Arbitrage Bot',
-    status: 'paused',
-    network: 'Ethereum/Polygon',
-    trigger: 'Price difference > 2%',
-    action: 'Execute cross-chain swap',
-    deposited: 2500,
-    earned: 45.8
-  },
-  {
-    id: 4,
-    name: 'ETH Stop Loss Protection',
-    status: 'active',
-    network: 'Ethereum',
-    trigger: 'ETH price drops 10%',
-    action: 'Swap 50% ETH → USDC',
-    deposited: 5000,
-    earned: 125.5
-  },
-  {
-    id: 5,
-    name: 'Arbitrage Bot',
-    status: 'paused',
-    network: 'Ethereum/Polygon',
-    trigger: 'Price difference > 2%',
-    action: 'Execute cross-chain swap',
-    deposited: 2500,
-    earned: 45.8
-  },
-  {
-    id: 6,
-    name: 'ETH Stop Loss Protection',
-    status: 'active',
-    network: 'Ethereum',
-    trigger: 'ETH price drops 10%',
-    action: 'Swap 50% ETH → USDC',
-    deposited: 5000,
-    earned: 125.5
-  },
-  {
-    id: 7,
-    name: 'ETH Stop Loss Protection',
-    status: 'active',
-    network: 'Ethereum',
-    trigger: 'ETH price drops 10%',
-    action: 'Swap 50% ETH → USDC',
-    deposited: 5000,
-    earned: 125.5
-  },
-  {
-    id: 8,
-    name: 'ETH Stop Loss Protection',
-    status: 'active',
-    network: 'Ethereum',
-    trigger: 'ETH price drops 10%',
-    action: 'Swap 50% ETH → USDC',
-    deposited: 5000,
-    earned: 125.5
-  },
-  {
-    id: 9,
-    name: 'Arbitrage Bot',
-    status: 'paused',
-    network: 'Ethereum/Polygon',
-    trigger: 'Price difference > 2%',
-    action: 'Execute cross-chain swap',
-    deposited: 2500,
-    earned: 45.8
-  }
-];
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Automations - 1Node DeFi Automations" },
+    { name: "description", content: "Automations for 1Node DeFi Automations" },
+  ];
+}
 
 export default function Automations() {
+  const [automations, setAutomations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // @ts-ignore
-  // @ts-ignore
-  // @ts-ignore
+  useEffect(() => {
+    const fetchAutomations = async () => {
+      try {
+        console.log('Fetching automations from /automations endpoint...');
+        const response = await axiosInstance.get('/automations');
+        console.log('Automations response:', response.data);
+        setAutomations(response.data.automations || []);
+        setLoading(false);
+      } catch (err: any) {
+        console.error('Error fetching automations:', err);
+        setError(err?.response?.data?.error || 'Failed to fetch automations');
+        setLoading(false);
+      }
+    };
+
+    fetchAutomations();
+  }, []);
   return (
     <AppLayout>
       <div className="p-4 lg:p-6">
@@ -127,12 +59,25 @@ export default function Automations() {
 
 
         {/* Automations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {automations.map((automation) => (
-            //   @ts-ignore
-            <AutomationCard key={automation.id} automation={automation} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-neutral-400">Loading automations...</div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-red-400">Error: {error}</div>
+          </div>
+        ) : automations.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-neutral-400">No automations found</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {automations.map((automation: any) => (
+              <AutomationCard key={automation.id} automation={automation} />
+            ))}
+          </div>
+        )}
       </div>
     </AppLayout>
   );

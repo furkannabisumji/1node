@@ -1,26 +1,40 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { Node } from '@xyflow/react';
+import { useAccount } from 'wagmi';
 import { AppLayout } from '~/components/layout/AppLayout';
 import { AutomationFlow } from '~/components/automation/AutomationFlow';
 import { LeftSidebar } from '~/components/automation/LeftSidebar';
 import { RightSidebar } from '~/components/automation/RightSidebar';
 import { TopActionBar } from '~/components/automation/TopActionBar';
 import { WithdrawModal } from '~/components/automation/WithdrawModal';
-import { DepositModal } from '~/components/automation/DepositModal';
 import { useAutomationStore } from '~/stores/useAutomationStore';
 import axiosInstance from '~/lib/axios';
-import { Bounce, toast, ToastContainer } from 'react-toastify';
+import { Bounce, toast } from 'react-toastify';
+
+import type { Route } from "./+types/automations.create";
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Create Automation - 1Node DeFi Automations" },
+    { name: "description", content: "Create a new automation for 1Node DeFi Automations" },
+  ];
+}
 
 export default function CreateAutomation() {
+  const { address } = useAccount();
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [automationStatus, setAutomationStatus] = useState<'draft' | 'deployed' | 'active'>('draft');
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
   const unconnectedRef = useRef<Node[]>([]);
   const {
     nodes,
     edges,
+    costBreakdown,
+    userDepositBalance,
+    depositStatus,
+    getIsDeployReady,
+    updateCostBreakdown,
   } = useAutomationStore();
   const connectedNodeIds = new Set<string>();
   // Use a ref to always get the latest nodes in handleSave
@@ -30,24 +44,7 @@ export default function CreateAutomation() {
     nodesRef.current = nodes;
   }, [nodes]);
 
-  const handleDeploy = useCallback(() => {
-    setAutomationStatus('deployed');
-  }, []);
-
-  useEffect(() => {
-    if (edges) {
-      edges.forEach((edge) => {
-        connectedNodeIds.add(edge.source);
-        connectedNodeIds.add(edge.target);
-      });
-    }
-
-
-    unconnectedRef.current = nodes.filter((node) => !connectedNodeIds.has(node.id));
-
-  }, [nodes, edges])
-
-  const handleSave = useCallback(async () => {
+  const handleDeploy = useCallback(async () => {
     const currentNodes = nodesRef.current;
 
     console.log("unconnected: ", unconnectedRef.current)
@@ -64,6 +61,23 @@ export default function CreateAutomation() {
         transition: Bounce,
       });
       return
+    }
+    
+    // Check if deposit requirements are met
+    if (!getIsDeployReady()) {
+      const remaining = costBreakdown.total - userDepositBalance;
+      toast.error(`Insufficient deposit balance. You need ${remaining.toFixed(2)} more USDC.`, {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        transition: Bounce,
+      });
+      return;
     }
     // Save automation logic
     const trigger = currentNodes.find((n) => n.type === 'trigger');
@@ -87,9 +101,87 @@ export default function CreateAutomation() {
       return;
     }
 
+    // Ensure receiver defaults to connected wallet address if empty
+    const actionConfig = { ...(action.data.config || {}) } as any;
+    if (actionConfig.receiver === '' && address) {
+      actionConfig.receiver = address;
+    }
+
+    // Generate dynamic description based on node configurations
+    const generateDescription = () => {
+      const triggerConfig = trigger.data.config as any;
+      const triggerType = trigger.data.label as string;
+      const actionType = action.data.label as string;
+      
+      let description = '';
+      
+      // Trigger description - more detailed
+      if (triggerType === 'Wallet Balance') {
+        const conditionText = triggerConfig.condition === 'greater_than' ? 'exceeds' :
+                             triggerConfig.condition === 'less_than' ? 'drops below' :
+                             'equals';
+        description += `When ${triggerConfig.token || 'token'} balance ${conditionText} ${triggerConfig.amount || 'amount'}`;
+      } else if (triggerType === 'Price Change') {
+        const operatorText = triggerConfig.operator === 'gte' ? 'hits' :
+                            triggerConfig.operator === 'lte' ? 'drops to' :
+                            triggerConfig.operator === 'gt' ? 'exceeds' :
+                            triggerConfig.operator === 'lt' ? 'falls below' :
+                            'reaches';
+        description += `When ${triggerConfig.token || 'ETH'} ${operatorText} $${triggerConfig.threshold || 'target'}`;
+      } else if (triggerType === 'Gas Price') {
+        const conditionText = triggerConfig.condition === 'less_than' ? 'drops below' : 'exceeds';
+        description += `When gas price ${conditionText} ${triggerConfig.gasLimit || 'limit'} USD`;
+      } else if (triggerType === 'Time Schedule') {
+        description += `On ${triggerConfig.scheduleType || 'schedule'} at ${triggerConfig.time || 'time'}`;
+      } else {
+        description += `When ${triggerType.toLowerCase()} conditions are met`;
+      }
+      
+      description += ', ';
+      
+      // Action description - more detailed with token symbols
+      if (actionType === 'Swap Tokens') {
+        const fromChain = actionConfig.fromChain === 1 ? 'Ethereum' : 
+                         actionConfig.fromChain === 10 ? 'Optimism' : 
+                         actionConfig.fromChain === 42161 ? 'Arbitrum' : 
+                         actionConfig.fromChain === 137 ? 'Polygon' : 'chain';
+        const toChain = actionConfig.toChain === 1 ? 'Ethereum' : 
+                       actionConfig.toChain === 10 ? 'Optimism' : 
+                       actionConfig.toChain === 42161 ? 'Arbitrum' : 
+                       actionConfig.toChain === 137 ? 'Polygon' : 'chain';
+        
+        // Get token symbols from addresses (basic mapping)
+        const getTokenSymbol = (address: string) => {
+          if (address === '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85') return 'USDC';
+          if (address === '0xA0b86a33E6Fe3c4c4b389F8b4af2218D6e8E58D3') return 'USDC';
+          return 'tokens';
+        };
+        
+        const fromToken = getTokenSymbol(actionConfig.fromToken);
+        const toToken = getTokenSymbol(actionConfig.toToken);
+        
+        if (fromChain !== toChain) {
+          description += `swap ${fromToken} from ${fromChain} to ${toToken} on ${toChain} using Fusion+`;
+        } else {
+          description += `swap ${actionConfig.amount || ''} ${fromToken} to ${toToken} on ${fromChain}`;
+        }
+      } else if (actionType === 'Send/Transfer') {
+        description += `send ${actionConfig.amount || 'amount'} ${actionConfig.token || 'tokens'} to ${actionConfig.recipient ? 'specified address' : 'wallet'}`;
+      } else if (actionType === 'Stake/Unstake') {
+        const actionText = actionConfig.action === 'unstake' ? 'unstake' : 'stake';
+        description += `${actionText} ${actionConfig.amount || 'amount'} ${actionConfig.token || 'tokens'} on ${actionConfig.protocol || 'protocol'}`;
+      } else if (actionType === 'Send Alert') {
+        description += `send ${actionConfig.alertType || 'notification'} alert: "${actionConfig.title || 'Alert'}"`;
+      } else {
+        description += `execute ${actionType.toLowerCase()}`;
+      }
+      
+      return description;
+    };
+
     const payload = {
       name: `${trigger.data.label} - ${action.data.label}`,
-      description: 'Created from visual builder',
+      description: generateDescription(),
       trigger: {
         type: trigger.data.type,
         chainId: (trigger?.data?.config as any)?.chainId,
@@ -97,7 +189,7 @@ export default function CreateAutomation() {
       },
       action: {
         type: action.data.type,
-        config: action.data.config,
+        config: actionConfig,
       },
       conditions: conditions.map((c) => ({
         type: c.type,
@@ -107,9 +199,33 @@ export default function CreateAutomation() {
     console.log(payload)
     try {
       const res = await axiosInstance.post('/automations', payload);
-      console.log(res)
+
+      const automationId = res.data.automation.id;
+
+
+      // Manually execute the automation
+
+      // const executeRes = await axiosInstance.post(`/automations/${automationId}/execute`)
+      
+      // console.log("Execute Response", executeRes)
+
+      // if (executeRes.status === 200) {
+      //   toast.success('Automation executed successfully!', {
+      //     position: "bottom-center",
+      //     autoClose: 5000,
+      //     hideProgressBar: false,
+      //     closeOnClick: false,
+      //     pauseOnHover: true,
+      //     draggable: true,
+      //     progress: undefined,
+      //     theme: "dark",
+      //     transition: Bounce,
+      //   });
+      // }
+
       if (res.status === 201) {
-        toast.success('Automation created successfully!', {
+        setAutomationStatus('deployed');
+        toast.success('Automation deployed successfully!', {
           position: "bottom-center",
           autoClose: 5000,
           hideProgressBar: false,
@@ -122,7 +238,7 @@ export default function CreateAutomation() {
         });
 
       } else {
-        toast.error(res.data?.error || 'Failed to create automation', {
+        toast.error(res.data?.error || 'Failed to deploy automation', {
           position: "bottom-center",
           autoClose: 5000,
           hideProgressBar: false,
@@ -164,7 +280,21 @@ export default function CreateAutomation() {
         });
       }
     }
-  }, []);
+  }, [address, getIsDeployReady, costBreakdown.total, userDepositBalance]);
+
+  useEffect(() => {
+    if (edges) {
+      edges.forEach((edge) => {
+        connectedNodeIds.add(edge.source);
+        connectedNodeIds.add(edge.target);
+      });
+    }
+
+
+    unconnectedRef.current = nodes.filter((node) => !connectedNodeIds.has(node.id));
+
+  }, [nodes, edges])
+
 
   const handleToggleLeftSidebar = useCallback(() => {
     setIsLeftSidebarOpen(prev => !prev);
@@ -190,7 +320,6 @@ export default function CreateAutomation() {
         {/* Top Action Bar */}
         <TopActionBar
           status={automationStatus}
-          onSave={handleSave}
           onDeploy={handleDeploy}
         />
 
@@ -218,7 +347,7 @@ export default function CreateAutomation() {
           {/* Right Sidebar */}
           <RightSidebar
             onWithdraw={() => setIsWithdrawModalOpen(true)}
-            onDeposit={() => setIsDepositModalOpen(true)}
+            onDeploy={handleDeploy}
           />
         </div>
 
@@ -226,10 +355,6 @@ export default function CreateAutomation() {
         <WithdrawModal
           isOpen={isWithdrawModalOpen}
           onClose={() => setIsWithdrawModalOpen(false)}
-        />
-        <DepositModal
-          isOpen={isDepositModalOpen}
-          onClose={() => setIsDepositModalOpen(false)}
         />
       </div>
     </AppLayout>
