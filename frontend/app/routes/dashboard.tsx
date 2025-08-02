@@ -53,7 +53,11 @@ export default function Dashboard() {
           validateStatus: () => true,
         })
 
-        setUser(authRes.data.user)
+         
+        if (authRes.status === 401) {
+          navigate('/onboarding')
+          return
+        }
        
         
         // Fetch portfolio and analytics data in parallel
@@ -73,6 +77,7 @@ export default function Dashboard() {
         console.error('Dashboard data fetch error:', err)
         if (err?.response?.status === 401) {
           // UnAuthenticated
+          navigate('/onboarding')
         } else {
           setError(err?.response?.data?.error || 'Failed to load dashboard data')
           setLoading(false)

@@ -21,8 +21,6 @@ export const AuthProvider = ({ children }) => {
 
             setUser(data.user)
         } catch (err) {
-            console.log("Auth Error is ", err)
-            navigate('/onboarding')
             setUser(null)
         }
     }
