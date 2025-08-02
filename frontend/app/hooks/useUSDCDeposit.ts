@@ -11,6 +11,7 @@ export function useUSDCDeposit() {
     setUserDepositBalance,
     setIsDepositLoading,
     setDepositStatus,
+    forceStatusRecalculation,
   } = useAutomationStore();
 
   // Get chain ID from selected chain
@@ -76,8 +77,11 @@ export function useUSDCDeposit() {
     
     if (isLoading) {
       setDepositStatus('loading');
+    } else if (!isLoading && !isDepositSuccess && !isApproveSuccess) {
+      // Reset to calculated status when no longer loading (but not on success - handled elsewhere)
+      forceStatusRecalculation();
     }
-  }, [isApprovePending, isApproveLoading, isDepositPending, isDepositLoading, setIsDepositLoading, setDepositStatus]);
+  }, [isApprovePending, isApproveLoading, isDepositPending, isDepositLoading, isDepositSuccess, isApproveSuccess, setIsDepositLoading, setDepositStatus, forceStatusRecalculation]);
 
   // Refetch balances after successful transactions
   useEffect(() => {
@@ -88,10 +92,35 @@ export function useUSDCDeposit() {
 
   useEffect(() => {
     if (isDepositSuccess) {
-      refetchVaultBalance();
-      refetchUSDCBalance();
+      // Refetch balances and force status recalculation
+      const handleDepositSuccess = async () => {
+        try {
+          // Refetch the vault balance
+          const { data: newVaultBalance } = await refetchVaultBalance();
+          await refetchUSDCBalance();
+          
+          // Update the store with the new balance
+          if (newVaultBalance !== undefined) {
+            const balance = formatUSDC(newVaultBalance as bigint);
+            setUserDepositBalance(balance);
+          }
+          
+          // Force status recalculation after balance update
+          setTimeout(() => {
+            forceStatusRecalculation();
+          }, 100);
+        } catch (error) {
+          console.error('Error refetching balances after deposit:', error);
+          // Fallback: force status recalculation after delay
+          setTimeout(() => {
+            forceStatusRecalculation();
+          }, 1000);
+        }
+      };
+      
+      handleDepositSuccess();
     }
-  }, [isDepositSuccess, refetchVaultBalance, refetchUSDCBalance]);
+  }, [isDepositSuccess, refetchVaultBalance, refetchUSDCBalance, setUserDepositBalance, forceStatusRecalculation]);
 
   // Approve USDC spending
   const approveUSDCSpending = useCallback(async (amount: number) => {

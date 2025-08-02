@@ -90,9 +90,15 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
         position: 'bottom-center',
         autoClose: 3000,
       });
-      setIsProcessing(false);
-      setAdditionalAmount('');
+      
+      // Refetch balances first, then reset processing state
       refetchBalances();
+      
+      // Reset local state after a short delay to ensure state updates propagate
+      setTimeout(() => {
+        setIsProcessing(false);
+        setAdditionalAmount('');
+      }, 200);
     }
   }, [isDepositSuccess, refetchBalances]);
 
@@ -251,7 +257,8 @@ export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
                   
                   {/* Additional Amount Input */}
                   <div className="mb-4">
-                    <label className="block text-xs text-neutral-400 mb-2">
+                    <label className="block text-xs text-neutral-400
+                     mb-2">
                       💰 Funds for trading opportunities
                     </label>
                     <div className="relative">
