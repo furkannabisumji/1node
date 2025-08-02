@@ -7,6 +7,7 @@ interface NodeConfigModalProps {
   nodeType: 'trigger' | 'condition' | 'action';
   nodeLabel: string;
   onSave: (config: any) => void;
+  existingConfig?: any;
 }
 
 const CHAIN_OPTIONS = [
@@ -61,21 +62,27 @@ const getDefaultConfig = (nodeType: 'trigger' | 'condition' | 'action', nodeLabe
   return {};
 };
 
-export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }: NodeConfigModalProps) {
+export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave, existingConfig }: NodeConfigModalProps) {
   const [config, setConfig] = useState<any>(() => getDefaultConfig(nodeType, nodeLabel));
 
-  // Reset config to default when modal opens or nodeType/nodeLabel changes
+  // Load existing config or default when modal opens
   useEffect(() => {
     if (isOpen) {
-      setConfig(getDefaultConfig(nodeType, nodeLabel));
+      const configToUse = existingConfig && Object.keys(existingConfig).length > 0 
+        ? existingConfig 
+        : getDefaultConfig(nodeType, nodeLabel);
+      console.log('Loading config for modal:', { existingConfig, configToUse, nodeLabel });
+      setConfig(configToUse);
     }
-  }, [isOpen, nodeType, nodeLabel]);
+  }, [isOpen, nodeType, nodeLabel, existingConfig]);
 
   if (!isOpen) return null;
 
+
   const handleSave = () => {
+    console.log('NodeConfigModal handleSave called with config:', config);
     onSave(config);
-    onClose();
+    // Don't call onClose() here - let the parent handle it
   };
 
   const renderTriggerConfig = () => {

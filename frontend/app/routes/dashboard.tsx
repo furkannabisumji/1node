@@ -36,8 +36,14 @@ const aiInsights = [
   }
 ];
 
+interface User {
+  email?: string;
+  id?: string;
+  [key: string]: any;
+}
+
 export default function Dashboard() {
-  const [user, setUser] = useState()
+  const [user, setUser] = useState<User | null>(null)
   const [portfolio, setPortfolio] = useState<any>(null)
   const [analytics, setAnalytics] = useState<any>(null)
   const [recentActivity, setRecentActivity] = useState<any[]>([]) 
@@ -53,11 +59,13 @@ export default function Dashboard() {
           validateStatus: () => true,
         })
 
-         
         if (authRes.status === 401) {
           navigate('/onboarding')
           return
         }
+        
+        // Set user data from auth response
+        setUser(authRes.data.user)
        
         
         // Fetch portfolio and analytics data in parallel

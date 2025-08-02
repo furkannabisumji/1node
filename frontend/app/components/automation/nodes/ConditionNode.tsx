@@ -6,7 +6,7 @@ interface ConditionNodeData {
   description: string;
   status: 'configured' | 'unconfigured';
   nodeType?: 'trigger' | 'condition' | 'action';
-  onConfigure?: (nodeData: ConditionNodeData) => void;
+  onConfigure?: (nodeData: ConditionNodeData, nodeId: string) => void;
   onDelete?: (nodeId: string) => void;
 }
 
@@ -14,8 +14,8 @@ export function ConditionNode({ data, id }: NodeProps<ConditionNodeData>) {
   const isConfigured = data.status === 'configured';
 
   const handleClick = () => {
-    if (data.onConfigure) {
-      data.onConfigure(data);
+    if (data.onConfigure && id) {
+      data.onConfigure(data, id);
     }
   };
 
