@@ -26,6 +26,7 @@ interface AutomationState {
   setDepositStatus: (status: DepositStatus) => void;
   setSelectedDepositChain: (chain: SupportedChain) => void;
   setIsDepositLoading: (loading: boolean) => void;
+  forceStatusRecalculation: () => void;
   
   // Computed getters
   getIsDeployReady: () => boolean;
@@ -78,6 +79,12 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
   setDepositStatus: (status) => set({ depositStatus: status }),
   setSelectedDepositChain: (chain) => set({ selectedDepositChain: chain }),
   setIsDepositLoading: (loading) => set({ isDepositLoading: loading }),
+  
+  forceStatusRecalculation: () => {
+    const { costBreakdown, userDepositBalance } = get();
+    const newStatus: DepositStatus = userDepositBalance >= costBreakdown.total ? 'sufficient' : 'insufficient';
+    set({ depositStatus: newStatus });
+  },
   
   // Computed getters
   getIsDeployReady: () => {
