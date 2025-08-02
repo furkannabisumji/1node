@@ -335,10 +335,10 @@ export default function Onboarding() {
 
         {/* Already registered? Sign in button */}
 
-        <div className="flex flex-row items-center gap-2 mt-4">
+        <div className="flex flex-row items-center gap-2 mt-4 justify-center p-6">
           <span className="text-neutral-500 text-sm">Already registered?</span>
           <button
-            className="flex items-center gap-2 px-4 py-2 text-sm cursor-pointer rounded-md hover:bg-neutral-800 text-white font-medium transition-colors disabled:opacity-60"
+            className="flex items-center gap-2 px-4 py-2 text-sm cursor-pointer rounded-md bg-neutral-800 hover:bg-neutral-900 text-white font-medium transition-colors disabled:opacity-60"
             onClick={signInOnly}
             disabled={registering}
             type="button"
