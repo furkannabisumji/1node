@@ -1,49 +1,15 @@
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import { Zap, ArrowRight, Play, TrendingUp, Shield, Bot, ChevronRight, DollarSign, Clock, Send, Check, Wallet, Menu, X } from 'lucide-react';
 
-import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
-import axiosInstance from '~/lib/axios';
+import { useState } from 'react';
 
-import { useSignMessage } from 'wagmi';
-import axios from 'axios';
 
 
 
 export function Welcome() {
-  const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
-
-  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => { 
-    const signIn = async () => {
-      if (!isConnected || !address) return;
-      try {
-        const message = `Sign this message to authenticate. Timestamp: ${Date.now()}`;
-        const signature = await signMessageAsync({ message });
-        const res = await axiosInstance.post('/auth/connect-wallet', {
-          walletAddress: address,
-          signature,
-          message,
-        });
-        if (res.data) {
-          navigate('/dashboard');
-        }
-      } catch (err) {
-        // Optionally handle error (e.g., show notification)
-        // console.error('Wallet sign-in failed:', err);
-        if (axios.isAxiosError(err)) {
-          console.error('Wallet connect failed:', err.response?.data?.error);
 
-        } else {
-          console.error('Unexpected error:', err);
-        }
-      }
-    };  
-    signIn();
-  }, [isConnected])
   return (
     <main className="min-h-screen bg-black">
       {/* Header */}
@@ -68,7 +34,7 @@ export function Welcome() {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-3">
-              
+
               <Link
                 to="/onboarding"
                 className="bg-green-500 hover:bg-green-600 text-black px-4 lg:px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 text-sm lg:text-base"
@@ -97,22 +63,22 @@ export function Welcome() {
           {isMobileMenuOpen && (
             <div className="md:hidden mt-4 pb-4 border-t border-neutral-800">
               <nav className="flex flex-col gap-4 pt-4">
-                <a 
-                  href="#features" 
+                <a
+                  href="#features"
                   className="text-neutral-300 hover:text-white transition-colors py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Features
                 </a>
-                <a 
-                  href="#automation" 
+                <a
+                  href="#automation"
                   className="text-neutral-300 hover:text-white transition-colors py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Automation
                 </a>
-                <a 
-                  href="#examples" 
+                <a
+                  href="#examples"
                   className="text-neutral-300 hover:text-white transition-colors py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -121,7 +87,7 @@ export function Welcome() {
 
                 {/* Mobile Actions */}
                 <div className="flex flex-col gap-3 pt-4 border-t border-neutral-700">
-                 
+
                   <Link
                     to="/onboarding"
                     className="bg-green-500 hover:bg-green-600 text-black px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
@@ -224,7 +190,7 @@ export function Welcome() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <div className="text-white font-medium mb-4 flex items-center gap-2">
                       <Play className="w-4 h-4 text-purple-500" />
@@ -248,8 +214,8 @@ export function Welcome() {
                 <div className="absolute inset-0 opacity-20">
                   <div className="grid grid-cols-8 md:grid-cols-12 grid-rows-6 md:grid-rows-8 h-full w-full">
                     {Array.from({ length: 96 }).map((_, i) => (
-                      <div 
-                        key={i} 
+                      <div
+                        key={i}
                         className={`border-r border-b border-neutral-700 ${i >= 48 ? 'hidden md:block' : ''}`}
                       ></div>
                     ))}

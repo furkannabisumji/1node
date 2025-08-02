@@ -115,11 +115,11 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
         </button>
 
         {/* Notifications */}
-        <button className="p-2 rounded-lg hover:bg-neutral-800 transition-colors relative">
+        {/* <button className="p-2 rounded-lg hover:bg-neutral-800 transition-colors relative">
           <Bell className="h-5 w-5 text-neutral-300" />
-          {/* Notification badge */}
+
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+        </button> */}
 
         {/* Wallet Connection Button */}
         <div className="relative">
@@ -135,7 +135,7 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
           {showWalletDropdown && (
             <div className="absolute right-0 mt-2 w-40 bg-neutral-900 border cursor-pointer border-neutral-700 rounded-lg shadow-lg z-50">
               <button
-                className="w-full text-left px-4 py-2 text-sm text-red-500 cursor-pointerhover:bg-neutral-800 rounded-t-lg"
+                className="w-full cursor-pointer text-left px-4 py-2 text-sm text-red-500 cursor-pointerhover:bg-neutral-800 rounded-t-lg"
                 onClick={handleLogout}
               >
                 Logout

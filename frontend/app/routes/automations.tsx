@@ -4,6 +4,14 @@ import { AutomationCard } from '~/components/automations/AutomationCard';
 import {Plus} from 'lucide-react';
 import {Link} from "react-router";
 import axiosInstance from '~/lib/axios';
+import type { Route } from "./+types/automations";
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Automations - 1Node DeFi Automations" },
+    { name: "description", content: "Automations for 1Node DeFi Automations" },
+  ];
+}
 
 export default function Automations() {
   const [automations, setAutomations] = useState<any[]>([]);
