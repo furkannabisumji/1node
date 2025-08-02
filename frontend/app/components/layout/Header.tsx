@@ -45,11 +45,9 @@ export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
       validateStatus: () => true, // disables automatic throwing for non-2xx
     }).then((res) => {
       setUser(res.data.user)
-      if (res.status === 401) {
-        navigate('/onboarding')
-      }
+
     }).catch((err) => {
-      navigate('/onboarding')
+      console.log("Auth Error is ", err)
     })
   }, [])
 
