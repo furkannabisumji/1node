@@ -161,6 +161,17 @@ async function executeFusionOrderAction(action: any, workflow: any, executionId:
         receiver: receiver || workflow.user.walletAddress
       });
 
+      // Generate temporary order hash for vault reservation
+      const tempOrderHash = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Handle vault for Fusion order (reserve but don't deduct immediately)
+      vaultReservation = await vaultService.handleFusionOrderVault(
+        workflow.user.walletAddress,
+        fromToken,
+        amount,
+        fromChain
+      );
+
       fusionOrder = await oneInchService.createFusionOrder(
         fromChain,
         toChain,
@@ -172,13 +183,6 @@ async function executeFusionOrderAction(action: any, workflow: any, executionId:
         deadline || Math.floor(Date.now() / 1000) + 3600
       );
 
-      // Handle vault for Fusion order (reserve but don't deduct immediately)
-      vaultReservation = await vaultService.handleFusionOrderVault(
-        workflow.user.walletAddress,
-        fromToken,
-        amount,
-        fusionOrder.orderHash
-      );
 
       logger.info('Cross-chain Fusion+ order created with vault reservation', {
         orderHash: fusionOrder.orderHash,
@@ -229,6 +233,14 @@ async function executeFusionOrderAction(action: any, workflow: any, executionId:
         receiver: receiver || workflow.user.walletAddress
       });
 
+      // Handle vault for Fusion order
+      vaultReservation = await vaultService.handleFusionOrderVault(
+        workflow.user.walletAddress,
+        fromToken,
+        amount,
+        targetChain
+      );
+
       fusionOrder = await oneInchService.createFusionOrder(
         targetChain,
         targetChain,
@@ -238,14 +250,6 @@ async function executeFusionOrderAction(action: any, workflow: any, executionId:
         workflow.user.walletAddress,
         receiver || workflow.user.walletAddress,
         deadline || Math.floor(Date.now() / 1000) + 3600
-      );
-
-      // Handle vault for Fusion order
-      vaultReservation = await vaultService.handleFusionOrderVault(
-        workflow.user.walletAddress,
-        fromToken,
-        amount,
-        fusionOrder.orderHash
       );
 
       logger.info('Same-chain Fusion+ order created with vault reservation', {

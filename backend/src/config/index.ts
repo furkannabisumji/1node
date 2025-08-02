@@ -26,6 +26,7 @@ interface Config {
 
   // Smart Contracts
   vaultContractAddress: string;
+  vaultContractAddressEtherlink: string;
 
   // AI Services
   openaiApiKey: string;
@@ -87,6 +88,7 @@ function validateConfig(): Config {
 
     // Smart Contracts
     vaultContractAddress: process.env.VAULT_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000',
+    vaultContractAddressEtherlink: process.env.VAULT_CONTRACT_ADDRESS_ETHERLINK || '0x0000000000000000000000000000000000000000',
 
     // AI Services
     openaiApiKey: process.env.OPENAI_API_KEY || '',
@@ -141,6 +143,12 @@ export const SUPPORTED_CHAINS = {
     name: 'Base',
     rpcUrl: `https://base-mainnet.g.alchemy.com/v2/${config.alchemyApiKey}`,
     nativeCurrency: 'ETH',
+  },
+  ETHERLINK: {
+    id: 128123,
+    name: 'Etherlink',
+    rpcUrl: process.env.ETHERLINK_RPC_URL || 'https://node.mainnet.etherlink.com',
+    nativeCurrency: 'XTZ',
   },
 } as const;
 
