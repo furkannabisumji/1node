@@ -8,7 +8,6 @@ import { LeftSidebar } from '~/components/automation/LeftSidebar';
 import { RightSidebar } from '~/components/automation/RightSidebar';
 import { TopActionBar } from '~/components/automation/TopActionBar';
 import { WithdrawModal } from '~/components/automation/WithdrawModal';
-import { DepositModal } from '~/components/automation/DepositModal';
 import { useAutomationStore } from '~/stores/useAutomationStore';
 import axiosInstance from '~/lib/axios';
 import { Bounce, toast, ToastContainer } from 'react-toastify';
@@ -17,7 +16,6 @@ import { useAuth } from '~/auth/AuthProvider';
 export default function CreateAutomation() {
   const { address } = useAccount();
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [automationStatus, setAutomationStatus] = useState<'draft' | 'deployed' | 'active'>('draft');
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
   const unconnectedRef = useRef<Node[]>([]);
@@ -341,7 +339,6 @@ export default function CreateAutomation() {
           {/* Right Sidebar */}
           <RightSidebar
             onWithdraw={() => setIsWithdrawModalOpen(true)}
-            onDeposit={() => setIsDepositModalOpen(true)}
             onDeploy={handleDeploy}
           />
         </div>
@@ -350,10 +347,6 @@ export default function CreateAutomation() {
         <WithdrawModal
           isOpen={isWithdrawModalOpen}
           onClose={() => setIsWithdrawModalOpen(false)}
-        />
-        <DepositModal
-          isOpen={isDepositModalOpen}
-          onClose={() => setIsDepositModalOpen(false)}
         />
       </div>
     </AppLayout>

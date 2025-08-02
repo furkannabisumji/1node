@@ -20,7 +20,7 @@ export interface CostBreakdown {
 const NODE_COSTS = {
   // Triggers
   'PRICE_THRESHOLD': {
-    base: 3.0,
+    base: 2.0,
     description: 'Price monitoring & API calls',
     category: 'trigger' as const,
     icon: '📈'

@@ -1,29 +1,100 @@
-import { useState } from 'react';
-import { Play, DollarSign, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Play, DollarSign, AlertTriangle, Plus, ChevronDown } from 'lucide-react';
 import { useAutomationStore } from '~/stores/useAutomationStore';
+import { SUPPORTED_CHAINS } from '~/utils/contracts';
 import { CostBreakdown } from './CostBreakdown';
 import { formatCost } from '~/utils/costCalculation';
+import { useUSDCDeposit } from '~/hooks/useUSDCDeposit';
+import { toast } from 'react-toastify';
 
 interface RightSidebarProps {
   onWithdraw: () => void;
-  onDeposit: () => void;
   onDeploy: () => void;
 }
 
-export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarProps) {
+export function RightSidebar({ onWithdraw, onDeploy }: RightSidebarProps) {
   const [activeTab, setActiveTab] = useState<'simulation' | 'requirements' | 'insights'>('requirements');
+  const [additionalAmount, setAdditionalAmount] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const {
     costBreakdown,
     userDepositBalance,
     depositStatus,
     getIsDeployReady,
-    nodes
+    nodes,
+    selectedDepositChain,
+    setSelectedDepositChain,
   } = useAutomationStore();
+  
+  const {
+    usdcBalance,
+    approveUSDCSpending,
+    deposit,
+    needsApproval,
+    isApprovePending,
+    isDepositPending,
+    isApproveSuccess,
+    isDepositSuccess,
+    refetchBalances,
+  } = useUSDCDeposit();
   
   const isDeployReady = getIsDeployReady();
   const hasNodes = nodes.length > 0;
   const remaining = Math.max(0, costBreakdown.total - userDepositBalance);
+  const additionalAmountValue = parseFloat(additionalAmount) || 0;
+  const totalDepositAmount = remaining + additionalAmountValue;
+  const hasInsufficientUSDC = totalDepositAmount > usdcBalance;
+  const canDeposit = totalDepositAmount > 0 && !hasInsufficientUSDC && !isProcessing;
+
+  const handleDeposit = async () => {
+    if (!canDeposit) return;
+
+    setIsProcessing(true);
+    try {
+      // Check if approval is needed
+      if (needsApproval(totalDepositAmount)) {
+        await approveUSDCSpending(totalDepositAmount);
+        // Wait for approval success before depositing
+      } else {
+        await deposit(totalDepositAmount);
+      }
+    } catch (error) {
+      console.error('Deposit failed:', error);
+      toast.error('Deposit failed. Please try again.', {
+        position: 'bottom-center',
+        autoClose: 5000,
+      });
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle approval success -> proceed to deposit
+  useEffect(() => {
+    if (isApproveSuccess && isProcessing) {
+      deposit(totalDepositAmount).catch((error) => {
+        console.error('Deposit after approval failed:', error);
+        toast.error('Deposit failed. Please try again.', {
+          position: 'bottom-center',
+          autoClose: 5000,
+        });
+        setIsProcessing(false);
+      });
+    }
+  }, [isApproveSuccess, isProcessing, deposit, totalDepositAmount]);
+
+  // Handle successful deposit
+  useEffect(() => {
+    if (isDepositSuccess) {
+      toast.success('Deposit successful!', {
+        position: 'bottom-center',
+        autoClose: 3000,
+      });
+      setIsProcessing(false);
+      setAdditionalAmount('');
+      refetchBalances();
+    }
+  }, [isDepositSuccess, refetchBalances]);
 
   return (
     <div className="w-96 bg-neutral-900 border-l border-neutral-800 flex flex-col h-full">
@@ -134,16 +205,134 @@ export function RightSidebar({ onWithdraw, onDeposit, onDeploy }: RightSidebarPr
               />
             </div>
             
-            {/* Deposit Button */}
+            {/* Deposit Section */}
             {depositStatus === 'insufficient' && (
               <div className="px-4 pb-4">
-                <button
-                  onClick={onDeposit}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition-colors font-medium cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <DollarSign className="w-4 h-4" />
-                  Deposit {formatCost(remaining)} USDC
-                </button>
+                <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
+                  <div className="flex items-center gap-2 mb-4">
+                    <DollarSign className="w-4 h-4 text-blue-500" />
+                    <span className="text-white font-medium">Deposit USDC</span>
+                  </div>
+                  
+                  {/* Chain Selection */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-white mb-2">🔗 Select Chain</label>
+                    <div className="relative">
+                      <select
+                        value={selectedDepositChain}
+                        onChange={(e) => setSelectedDepositChain(e.target.value as 'optimism' | 'etherlink')}
+                        className="w-full bg-neutral-700 border border-neutral-600 rounded-lg pl-3 pr-10 py-2 text-white text-sm focus:outline-none appearance-none cursor-pointer"
+                      >
+                        {(['optimism', 'etherlink'] as const).map((chain) => (
+                          <option key={chain} value={chain}>
+                            {SUPPORTED_CHAINS[chain === 'optimism' ? 10 : 42793].name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+                    </div>
+                  </div>
+                  
+                  {/* Deposit Breakdown */}
+                  <div className="space-y-2 text-sm mb-4">
+                    <div className="flex justify-between text-neutral-300">
+                      <span>Required (minimum):</span>
+                      <span className="text-red-400 font-medium">{formatCost(remaining)}</span>
+                    </div>
+                    <div className="flex justify-between text-neutral-300">
+                      <span>Additional for trading:</span>
+                      <span className="text-blue-400 font-medium">{formatCost(additionalAmountValue)}</span>
+                    </div>
+                    <div className="flex justify-between text-neutral-300 pt-2 border-t border-neutral-700 font-semibold">
+                      <span>Total deposit:</span>
+                      <span className="text-white font-medium">{formatCost(totalDepositAmount)}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Additional Amount Input */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-neutral-400 mb-2">
+                      💰 Funds for trading opportunities
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        value={additionalAmount}
+                        onChange={(e) => setAdditionalAmount(e.target.value)}
+                        min="0"
+                        step="0.01"
+                        className="w-full bg-neutral-700 border border-neutral-600 rounded-lg pl-3 pr-12 py-2 text-white text-sm placeholder-neutral-400 focus:outline-none"
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 text-xs">
+                        USDC
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Wallet Balance Info */}
+                  <div className="text-xs text-neutral-400 mb-4">
+                    Wallet balance: {formatCost(usdcBalance)} USDC
+                  </div>
+                  
+                  {hasInsufficientUSDC && (
+                    <div className="flex items-center gap-2 mb-4 text-red-400 text-xs">
+                      <AlertTriangle className="w-3 h-3" />
+                      <span>Insufficient USDC (need {formatCost(totalDepositAmount)})</span>
+                    </div>
+                  )}
+                  
+                  {/* Deposit Process Steps */}
+                  <div className="mb-4">
+                    <div className="text-xs text-neutral-400 mb-2">Process:</div>
+                    <div className="space-y-1 text-xs">
+                      <div className={`flex items-center gap-2 ${
+                        needsApproval(totalDepositAmount) ? 'text-neutral-300' : 'text-green-400'
+                      }`}>
+                        <div className="w-2 h-2 rounded-full border border-neutral-500"></div>
+                        <span>1. Approve USDC</span>
+                        {isApprovePending && (
+                          <div className="w-2 h-2 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-neutral-300">
+                        <div className="w-2 h-2 rounded-full border border-neutral-500"></div>
+                        <span>2. Deposit to contract</span>
+                        {isDepositPending && (
+                          <div className="w-2 h-2 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Deposit Button */}
+                  <button
+                    onClick={handleDeposit}
+                    disabled={!canDeposit || isApprovePending || isDepositPending}
+                    className={`w-full py-2 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2 ${
+                      !canDeposit || isApprovePending || isDepositPending
+                        ? 'bg-neutral-600 text-neutral-300 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                    }`}
+                  >
+                    {isApprovePending ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Approving...
+                      </>
+                    ) : isDepositPending ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Depositing...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3 h-3" />
+                        Deposit {formatCost(totalDepositAmount)}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
             

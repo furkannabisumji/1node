@@ -10,22 +10,20 @@ interface NodeConfigModalProps {
 }
 
 const CHAIN_OPTIONS = [
-  { value: 1, label: 'Ethereum (Mainnet)' },
-  { value: 137, label: 'Polygon' },
-  { value: 42161, label: 'Arbitrum' },
   { value: 10, label: 'Optimism' },
+  { value: 42793, label: 'Etherlink' },
 ];
 
 const TOKEN_ADDRESS_OPTIONS = [
   {
     value: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85',
-    label: 'ETH (Optimism)',
+    label: 'USDC (Optimism)',
     chain: 10,
   },
   {
-    value: '0xA0b86a33E6Fe3c4c4b389F8b4af2218D6e8E58D3',
-    label: 'USDC (Arbitrum)',
-    chain: 42161,
+    value: '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9',
+    label: 'USDC (Etherlink)',
+    chain: 42793,
   },
   // Add more tokens as needed
 ];
@@ -42,7 +40,7 @@ const OPERATOR_OPTIONS = [
 const getDefaultConfig = (nodeType: 'trigger' | 'condition' | 'action', nodeLabel: string) => {
   if (nodeType === 'trigger' && nodeLabel === 'Price Change') {
     return {
-      chainId: 1,
+      chainId: 10,
       token: 'ETH',
       operator: 'gte',
       threshold: '',
@@ -51,10 +49,10 @@ const getDefaultConfig = (nodeType: 'trigger' | 'condition' | 'action', nodeLabe
   if (nodeType === 'action' && (nodeLabel === 'Swap Tokens' || nodeLabel === 'Swap & Alert')) {
     return {
       fromToken: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85',
-      toToken: '0xA0b86a33E6Fe3c4c4b389F8b4af2218D6e8E58D3',
+      toToken: '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9',
       amount: '10',
       fromChain: 10,
-      toChain: 42161,
+      toChain: 42793,
       receiver: '',
       deadline: 3600,
     };
@@ -88,7 +86,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <label className="block text-sm font-medium text-white mb-2">Network</label>
             <select
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={config.chainId ?? 1}
+              value={config.chainId ?? 10}
               onChange={e => setConfig((prev: any) => ({ ...prev, chainId: Number(e.target.value) }))}
             >
               {CHAIN_OPTIONS.map(opt => (
@@ -143,12 +141,11 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <label className="block text-sm font-medium text-white mb-2">Network</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={config.network || 'ethereum'}
+              value={config.network || 'optimism'}
               onChange={(e) => setConfig((prev: any) => ({ ...prev, network: e.target.value }))}
             >
-              <option value="ethereum">Ethereum</option>
-              <option value="polygon">Polygon</option>
-              <option value="arbitrum">Arbitrum</option>
+              <option value="optimism">Optimism</option>
+              <option value="etherlink">Etherlink</option>
             </select>
           </div>
 
@@ -240,13 +237,11 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <label className="block text-sm font-medium text-white mb-2">Network</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={config.chainId || 1}
+              value={config.chainId || 10}
               onChange={(e) => setConfig((prev: any) => ({ ...prev, chainId: parseInt(e.target.value) }))}
             >
-              <option value={1}>Ethereum</option>
-              <option value={137}>Polygon</option>
-              <option value={42161}>Arbitrum</option>
               <option value={10}>Optimism</option>
+              <option value={42793}>Etherlink</option>
             </select>
           </div>
 
@@ -311,6 +306,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               >
                 <option value="ETH">ETH</option>
                 <option value="USDC">USDC</option>
+                <option value="XTZ">XTZ</option>
               </select>
             </div>
           </div>
@@ -332,6 +328,7 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
               >
                 <option value="ETH">ETH</option>
                 <option value="USDC">USDC</option>
+                <option value="XTZ">XTZ</option>
               </select>
             </div>
           </div>
@@ -526,13 +523,11 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <label className="block text-sm font-medium text-white mb-2">Network</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={config.network || 'ethereum'}
+              value={config.network || 'optimism'}
               onChange={(e) => setConfig((prev: any) => ({ ...prev, network: e.target.value }))}
             >
-              <option value="ethereum">Ethereum</option>
-              <option value="polygon">Polygon</option>
-              <option value="arbitrum">Arbitrum</option>
               <option value="optimism">Optimism</option>
+              <option value="etherlink">Etherlink</option>
             </select>
           </div>
 
@@ -886,13 +881,11 @@ export function NodeConfigModal({ isOpen, onClose, nodeType, nodeLabel, onSave }
             <label className="block text-sm font-medium text-white mb-2">Network</label>
             <select 
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              value={config.network || 'ethereum'}
+              value={config.network || 'optimism'}
               onChange={(e) => setConfig((prev: any) => ({ ...prev, network: e.target.value }))}
             >
-              <option value="ethereum">Ethereum</option>
-              <option value="polygon">Polygon</option>
-              <option value="arbitrum">Arbitrum</option>
               <option value="optimism">Optimism</option>
+              <option value="etherlink">Etherlink</option>
             </select>
           </div>
         </div>

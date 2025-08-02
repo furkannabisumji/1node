@@ -1,13 +1,8 @@
 import { useState } from "react";
 
 const blockchains = [
-    { id: 'optimism', name: 'Optimism', color: 'bg-red-400' },
-  { id: 'ethereum', name: 'Ethereum', color: 'bg-cyan-400' },
-
-  { id: 'polygon', name: 'Polygon', color: 'bg-purple-500' },
-  { id: 'arbitrum', name: 'Arbitrum', color: 'bg-orange-500' },
-  { id: 'bnb', name: 'BNB Chain', color: 'bg-yellow-500' },
-  { id: 'solana', name: 'Solana', color: 'bg-green-500' }
+  { id: 'optimism', name: 'Optimism', color: 'bg-red-400' },
+  { id: 'etherlink', name: 'Etherlink', color: 'bg-green-500' }
 ];
 
 interface BlockchainSelectorProps {
