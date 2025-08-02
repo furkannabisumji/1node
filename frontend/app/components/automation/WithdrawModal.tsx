@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, ChevronDown, AlertTriangle, CheckCircle, DollarSign, ArrowDownLeft } from 'lucide-react';
 import { useMultiChainWithdrawals } from '~/hooks/useUSDCWithdraw';
 import { formatCost } from '~/utils/costCalculation';
@@ -15,6 +15,8 @@ export function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
   const [selectedChain, setSelectedChain] = useState<SupportedChain>('optimism');
   const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const withdrawSuccessProcessed = useRef(false);
+  const lastWithdrawAmount = useRef(0);
 
   const {
     optimism,
@@ -30,17 +32,25 @@ export function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
 
   // Handle successful withdrawal
   useEffect(() => {
-    if (currentChainData.isWithdrawSuccess) {
-      toast.success(`Successfully withdrew ${formatCost(withdrawAmount)} from ${selectedChain}!`, {
+    if (currentChainData.isWithdrawSuccess && isProcessing && !withdrawSuccessProcessed.current) {
+      withdrawSuccessProcessed.current = true;
+      
+      toast.success(`Successfully withdrew ${formatCost(lastWithdrawAmount.current)} from ${selectedChain}!`, {
         position: 'bottom-center',
         autoClose: 3000,
       });
+      
       setAmount('');
       setIsProcessing(false);
       refetchAll();
       onClose();
+      
+      // Reset for next withdrawal
+      setTimeout(() => {
+        withdrawSuccessProcessed.current = false;
+      }, 100);
     }
-  }, [currentChainData.isWithdrawSuccess, withdrawAmount, selectedChain, refetchAll, onClose]);
+  }, [currentChainData.isWithdrawSuccess, isProcessing, withdrawAmount, selectedChain, refetchAll, onClose]);
 
   // Handle withdrawal errors
   useEffect(() => {
@@ -58,6 +68,7 @@ export function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
   const handleWithdraw = async () => {
     if (!canWithdraw) return;
 
+    lastWithdrawAmount.current = withdrawAmount;
     setIsProcessing(true);
     try {
       await currentChainData.withdraw(withdrawAmount);
@@ -74,6 +85,7 @@ export function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
   const handleWithdrawAll = async () => {
     if (currentChainData.depositBalance <= 0) return;
 
+    lastWithdrawAmount.current = currentChainData.vaultBalance;
     setIsProcessing(true);
     try {
       await currentChainData.withdrawAll();

@@ -62,17 +62,19 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
     const breakdown = calculateCostBreakdown(nodes, edges);
     set({ costBreakdown: breakdown });
     
-    // Update deposit status based on balance vs requirement
+    // Update deposit status based on balance vs requirement (with floating point tolerance)
     const { userDepositBalance } = get();
-    const newStatus: DepositStatus = userDepositBalance >= breakdown.total ? 'sufficient' : 'insufficient';
+    const difference = breakdown.total - userDepositBalance;
+    const newStatus: DepositStatus = difference <= 0.001 ? 'sufficient' : 'insufficient';
     set({ depositStatus: newStatus });
   },
   
   setUserDepositBalance: (balance) => {
     set({ userDepositBalance: balance });
-    // Update status when balance changes
+    // Update status when balance changes (with floating point tolerance)
     const { costBreakdown } = get();
-    const newStatus: DepositStatus = balance >= costBreakdown.total ? 'sufficient' : 'insufficient';
+    const difference = costBreakdown.total - balance;
+    const newStatus: DepositStatus = difference <= 0.001 ? 'sufficient' : 'insufficient';
     set({ depositStatus: newStatus });
   },
   
@@ -82,7 +84,8 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
   
   forceStatusRecalculation: () => {
     const { costBreakdown, userDepositBalance } = get();
-    const newStatus: DepositStatus = userDepositBalance >= costBreakdown.total ? 'sufficient' : 'insufficient';
+    const difference = costBreakdown.total - userDepositBalance;
+    const newStatus: DepositStatus = difference <= 0.001 ? 'sufficient' : 'insufficient';
     set({ depositStatus: newStatus });
   },
   

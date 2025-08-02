@@ -34,7 +34,7 @@ export function TopActionBar({ status, onDeploy }: TopActionBarProps) {
       return {
         disabled: true,
         className: "flex items-center gap-2 bg-red-600/50 text-red-200 px-4 py-2 rounded-lg cursor-not-allowed",
-        text: `Deposit Required (${formatCost(remaining)})`,
+        text: `Minimum Deposit Required (${formatCost(remaining)})`,
         icon: <AlertTriangle className="w-4 h-4" />
       };
     }
