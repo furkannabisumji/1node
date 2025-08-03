@@ -139,12 +139,12 @@ export function Welcome() {
               Start Building Free
               <Zap className="w-5 h-5" />
             </Link>
-            <button className="group flex items-center gap-3 text-white hover:text-green-400 transition-colors">
+            <Link to={'https://youtu.be/UzCThAJmoVU'} target='_blank' className="group flex items-center gap-3 text-white hover:text-green-400 transition-colors">
               <div className="w-12 h-12 bg-neutral-800 hover:bg-neutral-700 rounded-full flex items-center justify-center transition-colors">
                 <Play className="w-5 h-5 ml-1" />
               </div>
               <span className="font-medium">Watch 2min Demo</span>
-            </button>
+            </Link>
           </div>
         </div>
       </section>

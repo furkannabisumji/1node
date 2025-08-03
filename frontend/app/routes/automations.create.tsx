@@ -13,8 +13,10 @@ import axiosInstance from '~/lib/axios';
 import { Bounce, toast } from 'react-toastify';
 
 import type { Route } from "./+types/automations.create";
+import { useNavigate } from 'react-router';
+import { useAuth } from '~/auth/AuthProvider';
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ }: Route.MetaArgs) {
   return [
     { title: "Create Automation - 1Node DeFi Automations" },
     { name: "description", content: "Create a new automation for 1Node DeFi Automations" },
@@ -39,11 +41,38 @@ export default function CreateAutomation() {
   const connectedNodeIds = new Set<string>();
   // Use a ref to always get the latest nodes in handleSave
   const nodesRef = useRef(nodes);
-
+  const navigate = useNavigate()
+  const { user, setUser } = useAuth()
   useEffect(() => {
     nodesRef.current = nodes;
   }, [nodes]);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        // Check authentication first
+        const authRes = await axiosInstance.get(`/auth/me`, {
+          validateStatus: () => true,
+        })
+
+        if (authRes.status === 401) {
+          navigate('/onboarding')
+          return
+        }
+
+        // Set user data from auth response
+        setUser(authRes.data.user)
+
+      } catch (err: any) {
+        console.error('Dashboard data fetch error:', err)
+        if (err?.response?.status === 401) {
+          // UnAuthenticated
+          navigate('/onboarding')
+        }
+      }
+    }
+    fetchUser()
+  }, [])
   const handleDeploy = useCallback(async () => {
     const currentNodes = nodesRef.current;
 
@@ -62,7 +91,7 @@ export default function CreateAutomation() {
       });
       return
     }
-    
+
     // Check if deposit requirements are met
     if (!getIsDeployReady()) {
       const remaining = costBreakdown.total - userDepositBalance;
@@ -112,28 +141,28 @@ export default function CreateAutomation() {
       const triggerConfig = (trigger.data?.config || {}) as any;
       const triggerType = trigger.data?.label as string;
       const actionType = action.data?.label as string;
-      
+
       let description = '';
-      
+
       // Trigger description - more detailed
       if (triggerType === 'Wallet Balance') {
         const conditionText = triggerConfig.condition === 'greater_than' ? 'exceeds' :
-                             triggerConfig.condition === 'less_than' ? 'drops below' :
-                             'equals';
+          triggerConfig.condition === 'less_than' ? 'drops below' :
+            'equals';
         description += `When ${triggerConfig.token || 'token'} balance ${conditionText} ${triggerConfig.amount || 'amount'}`;
       } else if (triggerType === 'Price Change') {
         const operatorText = triggerConfig.operator === 'gte' ? 'hits' :
-                            triggerConfig.operator === 'lte' ? 'drops to' :
-                            triggerConfig.operator === 'gt' ? 'exceeds' :
-                            triggerConfig.operator === 'lt' ? 'falls below' :
-                            'reaches';
+          triggerConfig.operator === 'lte' ? 'drops to' :
+            triggerConfig.operator === 'gt' ? 'exceeds' :
+              triggerConfig.operator === 'lt' ? 'falls below' :
+                'reaches';
         description += `When ${triggerConfig.token || 'ETH'} ${operatorText} $${triggerConfig.threshold || 'target'}`;
       } else if (triggerType === 'Price Threshold') {
         const operatorText = triggerConfig.operator === 'gte' ? 'hits' :
-                            triggerConfig.operator === 'lte' ? 'drops to' :
-                            triggerConfig.operator === 'gt' ? 'exceeds' :
-                            triggerConfig.operator === 'lt' ? 'falls below' :
-                            'reaches';
+          triggerConfig.operator === 'lte' ? 'drops to' :
+            triggerConfig.operator === 'gt' ? 'exceeds' :
+              triggerConfig.operator === 'lt' ? 'falls below' :
+                'reaches';
         description += `When ${triggerConfig.token || 'ETH'} ${operatorText} $${triggerConfig.threshold || 'target'}`;
       } else if (triggerType === 'Gas Price') {
         const conditionText = triggerConfig.condition === 'less_than' ? 'drops below' : 'exceeds';
@@ -143,30 +172,30 @@ export default function CreateAutomation() {
       } else {
         description += `When ${triggerType?.toLowerCase() || 'trigger'} conditions are met`;
       }
-      
+
       description += ', ';
-      
+
       // Action description - more detailed with token symbols
       if (actionType === 'Swap Tokens') {
-        const fromChain = actionConfig.fromChain === 1 ? 'Ethereum' : 
-                         actionConfig.fromChain === 10 ? 'Optimism' : 
-                         actionConfig.fromChain === 42161 ? 'Arbitrum' : 
-                         actionConfig.fromChain === 137 ? 'Polygon' : 'chain';
-        const toChain = actionConfig.toChain === 1 ? 'Ethereum' : 
-                       actionConfig.toChain === 10 ? 'Optimism' : 
-                       actionConfig.toChain === 42161 ? 'Arbitrum' : 
-                       actionConfig.toChain === 137 ? 'Polygon' : 'chain';
-        
+        const fromChain = actionConfig.fromChain === 1 ? 'Ethereum' :
+          actionConfig.fromChain === 10 ? 'Optimism' :
+            actionConfig.fromChain === 42161 ? 'Arbitrum' :
+              actionConfig.fromChain === 137 ? 'Polygon' : 'chain';
+        const toChain = actionConfig.toChain === 1 ? 'Ethereum' :
+          actionConfig.toChain === 10 ? 'Optimism' :
+            actionConfig.toChain === 42161 ? 'Arbitrum' :
+              actionConfig.toChain === 137 ? 'Polygon' : 'chain';
+
         // Get token symbols from addresses (basic mapping)
         const getTokenSymbol = (address: string) => {
           if (address === '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85') return 'USDC';
           if (address === '0xA0b86a33E6Fe3c4c4b389F8b4af2218D6e8E58D3') return 'USDC';
           return 'tokens';
         };
-        
+
         const fromToken = getTokenSymbol(actionConfig.fromToken);
         const toToken = getTokenSymbol(actionConfig.toToken);
-        
+
         if (fromChain !== toChain) {
           description += `swap ${fromToken} from ${fromChain} to ${toToken} on ${toChain} using Fusion+`;
         } else {
@@ -182,7 +211,7 @@ export default function CreateAutomation() {
       } else {
         description += `execute ${actionType.toLowerCase()}`;
       }
-      
+
       return description;
     };
 
@@ -213,7 +242,7 @@ export default function CreateAutomation() {
       // Manually execute the automation
 
       // const executeRes = await axiosInstance.post(`/automations/${automationId}/execute`)
-      
+
       // console.log("Execute Response", executeRes)
 
       // if (executeRes.status === 200) {
