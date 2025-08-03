@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { Node } from '@xyflow/react';
 import { useAccount } from 'wagmi';
+
 import { AppLayout } from '~/components/layout/AppLayout';
 import { AutomationFlow } from '~/components/automation/AutomationFlow';
 import { LeftSidebar } from '~/components/automation/LeftSidebar';
@@ -16,7 +17,40 @@ import type { Route } from "./+types/automations.create";
 import { useNavigate } from 'react-router';
 import { useAuth } from '~/auth/AuthProvider';
 
-export function meta({ }: Route.MetaArgs) {
+// Map frontend node labels to backend API types
+const getBackendNodeType = (label: string): string => {
+  const mapping: Record<string, string> = {
+    // Triggers
+    'Price Change': 'PRICE_THRESHOLD',
+    'Wallet Balance': 'WALLET_BALANCE', 
+    'Gas Price': 'GAS_PRICE',
+    'Time Schedule': 'TIME_SCHEDULE',
+    
+    // Actions
+    'Swap Tokens': 'FUSION_ORDER',
+    'Swap & Alert': 'FUSION_ORDER',
+    'Send/Transfer': 'TRANSFER',
+    'Stake/Unstake': 'STAKE_UNSTAKE',
+    'Send Alert': 'SEND_ALERT',
+    'Provide Liquidity': 'PROVIDE_LIQUIDITY',
+    'Claim Rewards': 'CLAIM_REWARDS',
+    'Rebalance Portfolio': 'REBALANCE_PORTFOLIO',
+    'Execute Strategy': 'EXECUTE_STRATEGY',
+    
+    // Conditions (might not have specific backend types, using labels for now)
+    'Amount Limits': 'AMOUNT_LIMITS',
+    'Time Restrictions': 'TIME_RESTRICTIONS', 
+    'Portfolio Percentage': 'PORTFOLIO_PERCENTAGE',
+    'Market Volume': 'MARKET_VOLUME',
+    'Gas Fee Limit': 'GAS_FEE_LIMIT',
+    'Safety Checks': 'SAFETY_CHECKS',
+    'Loss Limits': 'LOSS_LIMITS',
+  };
+  
+  return mapping[label] || label;
+};
+
+export function meta({}: Route.MetaArgs) {
   return [
     { title: "Create Automation - 1Node DeFi Automations" },
     { name: "description", content: "Create a new automation for 1Node DeFi Automations" },
@@ -25,6 +59,7 @@ export function meta({ }: Route.MetaArgs) {
 
 export default function CreateAutomation() {
   const { address } = useAccount();
+
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [automationStatus, setAutomationStatus] = useState<'draft' | 'deployed' | 'active'>('draft');
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
@@ -130,6 +165,40 @@ export default function CreateAutomation() {
       return;
     }
 
+    // Validate node configurations
+    const initialTriggerConfig = trigger.data?.config || {};
+    const initialActionConfig = action.data?.config || {};
+    
+    if (Object.keys(initialTriggerConfig).length === 0) {
+      toast.error('Please configure your trigger node by double-clicking on it.', {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        transition: Bounce,
+      });
+      return;
+    }
+    
+    if (Object.keys(initialActionConfig).length === 0) {
+      toast.error('Please configure your action node by double-clicking on it.', {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        transition: Bounce,
+      });
+      return;
+    }
+
     // Ensure receiver defaults to connected wallet address if empty
     const actionConfig = { ...(action.data.config || {}) } as any;
     if (actionConfig.receiver === '' && address) {
@@ -219,16 +288,16 @@ export default function CreateAutomation() {
       name: `${trigger.data.label} - ${action.data.label}`,
       description: generateDescription(),
       trigger: {
-        type: trigger.data.type,
+        type: getBackendNodeType(trigger.data.label as string),
         chainId: (trigger?.data?.config as any)?.chainId,
         config: trigger.data.config,
       },
       action: {
-        type: action.data.type,
+        type: getBackendNodeType(action.data.label as string),
         config: actionConfig,
       },
       conditions: conditions.map((c) => ({
-        type: c.type,
+        type: getBackendNodeType((c.data?.label as string) || c.type || 'UNKNOWN'),
         config: c.data,
       })),
     };
@@ -261,17 +330,22 @@ export default function CreateAutomation() {
 
       if (res.status === 201) {
         setAutomationStatus('deployed');
-        toast.success('Automation deployed successfully!', {
+        toast.success('Automation deployed successfully! Redirecting to automations page...', {
           position: "bottom-center",
-          autoClose: 5000,
+          autoClose: 2000,
           hideProgressBar: false,
           closeOnClick: false,
-          pauseOnHover: true,
+          pauseOnHover: false,
           draggable: true,
           progress: undefined,
           theme: "dark",
           transition: Bounce,
         });
+
+        // Redirect to automations page after 1 second
+        setTimeout(() => {
+          navigate('/automations');
+        }, 1000);
 
       } else {
         toast.error(res.data?.error || 'Failed to deploy automation', {
