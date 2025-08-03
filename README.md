@@ -303,7 +303,7 @@ Special thanks to the teams and protocols that made this possible:
 
 ## 📞 Connect With Us
 
-- **🌐 Live Demo**: (Link)[https://1node.vercel.app/]
+- **🌐 Live Demo**: [Link](https://1node.vercel.app/]
 ---
 
 <div align="center">
