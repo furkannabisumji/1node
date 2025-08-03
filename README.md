@@ -303,12 +303,7 @@ Special thanks to the teams and protocols that made this possible:
 
 ## 📞 Connect With Us
 
-- **🌐 Live Demo**: Coming soon...
-- **📖 Documentation**: [docs.1node.app](https://docs.1node.app)
-- **💬 Discord**: [Join our community](https://discord.gg/1node)
-- **🐦 Twitter**: [@1NodeDeFi](https://twitter.com/1NodeDeFi)
-- **📧 Email**: hello@1node.app
-
+- **🌐 Live Demo**: (Link)[https://1node.vercel.app/]
 ---
 
 <div align="center">
